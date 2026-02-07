@@ -134,6 +134,15 @@ h2 {
 .day.done { background: #22c55e; color: black; }
 .day.freeze { background: #facc15; color: black; }
 .day.missed { background: #ef4444; color: white; }
+#stats {
+  margin-bottom:16px;
+  display:flex;
+  justify-content:space-around;
+  text-align:center;
+}
+#stats div { flex:1; }
+#stats div div:first-child { font-size:18px; color:#94a3b8; }
+#stats div div:last-child { font-size:22px; font-weight:bold; }
 </style>
 </head>
 <body>
@@ -143,6 +152,21 @@ h2 {
   <h1>Keepy</h1>
   <p class="motto">Keep Going</p>
   <h2>🔥 Moje passy</h2>
+</div>
+
+<div id="stats">
+  <div>
+    <div>Dni wykonane</div>
+    <div id="totalDone">0</div>
+  </div>
+  <div>
+    <div>Najdłuższa passa</div>
+    <div id="maxStreak">0</div>
+  </div>
+  <div>
+    <div>Średnia dzienna</div>
+    <div id="averageDaily">0</div>
+  </div>
 </div>
 
 <div id="list"></div>
@@ -168,6 +192,27 @@ function save(){
 
 function daysBetween(a,b){ return Math.floor((new Date(a)-new Date(b))/86400000); }
 function wasYesterdayValid(h){ return (h.datesDone && h.datesDone.includes(yesterday())) || (h.freezeDates && h.freezeDates.includes(yesterday())); }
+
+function updateStats(){
+  let totalDone = 0;
+  let maxStreak = 0;
+  let totalDaysTracked = 0;
+
+  habits.forEach(h => {
+    if(h.datesDone) totalDone += h.datesDone.length;
+    if(h.streak > maxStreak) maxStreak = h.streak;
+    if(h.lastDate){
+      const firstDate = h.datesDone && h.datesDone.length ? h.datesDone[0] : today();
+      totalDaysTracked += daysBetween(today(), firstDate) + 1;
+    }
+  });
+
+  const averageDaily = totalDaysTracked ? (totalDone / totalDaysTracked).toFixed(2) : 0;
+
+  document.getElementById("totalDone").textContent = totalDone;
+  document.getElementById("maxStreak").textContent = maxStreak;
+  document.getElementById("averageDaily").textContent = averageDaily;
+}
 
 function renderCalendar(h, monthOffset=0){
   const container = document.createElement("div");
@@ -353,9 +398,10 @@ function render(){
 
     list.appendChild(div);
 
-    // wysyłanie powiadomienia
     notifyIfNotDone(h);
   });
+
+  updateStats();
 }
 
 addBtn.onclick=()=>{
@@ -366,7 +412,6 @@ addBtn.onclick=()=>{
   render();
 };
 
-// prosba o zgodę na powiadomienia
 if(Notification.permission !== "granted"){
   Notification.requestPermission();
 }
