@@ -3,101 +3,89 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Passy z Kalendarzem</title>
+<title>Passy z Rozwijanym Kalendarzem i Freeze</title>
 
 <style>
-  body {
-    font-family: system-ui, -apple-system, sans-serif;
-    background: #0f172a;
-    color: white;
-    margin: 0;
-    padding: 16px;
-  }
-  h1 {
-    text-align: center;
-  }
-  .add {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: #22c55e;
-    color: black;
-    font-size: 32px;
-    border: none;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  .habit {
-    background: #020617;
-    padding: 16px;
-    border-radius: 14px;
-    margin-bottom: 12px;
-    display: flex;
-    flex-direction: column;
-    transition: all 0.3s ease;
-    opacity: 1;
-  }
-  .habit.flash {
-    animation: flash 0.5s;
-  }
-  @keyframes flash {
-    0% { background: #020617; }
-    50% { background: #22c55e; }
-    100% { background: #020617; }
-  }
-  .habit.fade-out {
-    animation: fadeOut 0.5s forwards;
-  }
-  @keyframes fadeOut {
-    to { opacity: 0; transform: scale(0.8); }
-  }
-  .habit-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .name {
-    font-size: 18px;
-  }
-  .streak {
-    font-size: 22px;
-  }
-  .actions button {
-    margin-left: 6px;
-    border: none;
-    border-radius: 8px;
-    padding: 6px 10px;
-    font-size: 14px;
-    cursor: pointer;
-  }
-  .done { background: #22c55e; }
-  .delete { background: #ef4444; color: white; }
-  .calendar {
-    margin-top: 8px;
-    display: flex;
-    flex-wrap: wrap;
-  }
-  .day {
-    width: 14.2%;
-    height: 24px;
-    margin-bottom: 2px;
-    text-align: center;
-    line-height: 24px;
-    font-size: 12px;
-    border-radius: 4px;
-    background: #111827;
-  }
-  .day.done { background: #22c55e; color: black; }
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #0f172a;
+  color: white;
+  margin: 0;
+  padding: 16px;
+}
+h1 { text-align: center; }
+.add {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #22c55e;
+  color: black;
+  font-size: 32px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+}
+.habit {
+  background: #020617;
+  padding: 16px;
+  border-radius: 14px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  opacity: 1;
+}
+.habit.flash { animation: flash 0.5s; }
+@keyframes flash {
+  0% { background: #020617; }
+  50% { background: #22c55e; }
+  100% { background: #020617; }
+}
+.habit.fade-out { animation: fadeOut 0.5s forwards; }
+@keyframes fadeOut { to { opacity: 0; transform: scale(0.8); } }
+
+.habit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.name { font-size: 18px; }
+.streak { font-size: 22px; }
+.actions button {
+  margin-left: 6px;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.done { background: #22c55e; }
+.delete { background: #ef4444; color: white; }
+.freeze { background: #facc15; color: black; }
+.calendar-container { margin-top: 8px; }
+.calendar { display: flex; flex-wrap: wrap; overflow: hidden; max-height: 0; transition: max-height 0.3s ease; }
+.calendar.show { max-height: 400px; }
+.calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.day {
+  width: 14.2%;
+  height: 24px;
+  margin-bottom: 2px;
+  text-align: center;
+  line-height: 24px;
+  font-size: 12px;
+  border-radius: 4px;
+  background: #111827;
+}
+.day.done { background: #22c55e; color: black; }
 </style>
 </head>
 <body>
 
 <h1>🔥 Moje passy</h1>
 <div id="list"></div>
-
 <button class="add" id="addBtn">+</button>
 
 <script>
@@ -107,37 +95,69 @@ const today = () => new Date().toISOString().slice(0,10);
 
 let habits = JSON.parse(localStorage.getItem("habits")) || [];
 
-function save() {
-  localStorage.setItem("habits", JSON.stringify(habits));
-}
+function save(){ localStorage.setItem("habits", JSON.stringify(habits)); }
+function daysBetween(a,b){ return Math.floor((new Date(a)-new Date(b))/86400000); }
 
-function daysBetween(a,b) {
-  return Math.floor((new Date(a)-new Date(b))/86400000);
-}
+function renderCalendar(h, monthOffset=0){
+  const container = document.createElement("div");
+  container.className = "calendar-container";
 
-function renderCalendar(h) {
-  const calendarDiv = document.createElement("div");
-  calendarDiv.className = "calendar";
-  const currentMonth = new Date().toISOString().slice(0,7); // YYYY-MM
-  for(let d=1; d<=31; d++){
-    const dayStr = `${currentMonth}-${String(d).padStart(2,'0')}`;
-    const dayDiv = document.createElement("div");
-    dayDiv.className = "day";
-    dayDiv.textContent = d;
-    if(h.datesDone && h.datesDone.includes(dayStr)) dayDiv.classList.add("done");
-    calendarDiv.appendChild(dayDiv);
+  const calHeader = document.createElement("div");
+  calHeader.className = "calendar-header";
+
+  const left = document.createElement("button"); left.textContent="<";
+  const right = document.createElement("button"); right.textContent=">";
+  const title = document.createElement("span");
+
+  let refDate = new Date();
+  refDate.setMonth(refDate.getMonth()+monthOffset);
+  const monthKey = refDate.toISOString().slice(0,7);
+  title.textContent = refDate.toLocaleString('pl-PL',{month:'long', year:'numeric'});
+
+  left.onclick = ()=>{ render(); renderCalendar(h, monthOffset-1); };
+  right.onclick = ()=>{ render(); renderCalendar(h, monthOffset+1); };
+
+  calHeader.appendChild(left);
+  calHeader.appendChild(title);
+  calHeader.appendChild(right);
+  container.appendChild(calHeader);
+
+  const calDiv = document.createElement("div");
+  calDiv.className = "calendar show";
+
+  const firstDay = new Date(refDate.getFullYear(), refDate.getMonth(),1).getDay();
+  const daysInMonth = new Date(refDate.getFullYear(), refDate.getMonth()+1,0).getDate();
+
+  for(let i=0;i<firstDay;i++){
+    const empty = document.createElement("div"); empty.className="day"; calDiv.appendChild(empty);
   }
-  return calendarDiv;
+
+  for(let d=1;d<=daysInMonth;d++){
+    const dayStr = `${refDate.getFullYear()}-${String(refDate.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayDiv = document.createElement("div");
+    dayDiv.className="day"; dayDiv.textContent=d;
+    if(h.datesDone && h.datesDone.includes(dayStr)) dayDiv.classList.add("done");
+    calDiv.appendChild(dayDiv);
+  }
+
+  container.appendChild(calDiv);
+  return container;
 }
 
-function render() {
-  list.innerHTML = "";
-
+function render(){
+  list.innerHTML="";
   habits.forEach((h,i)=>{
-    const div = document.createElement("div");
-    div.className = "habit";
+    // reset po 2 dniach jeśli nie freeze
+    if(!h.freeze && h.lastDate){
+      const diff = daysBetween(today(), h.lastDate);
+      if(diff>=2) h.streak=0;
+    }
 
-    const doneToday = h.lastDate === today();
+    const div = document.createElement("div");
+    div.className="habit";
+
+    const doneToday = h.lastDate===today();
+    const freeze = h.freeze===true;
 
     div.innerHTML = `
       <div class="habit-header">
@@ -146,60 +166,59 @@ function render() {
           <div class="streak">🔥 ${h.streak}</div>
         </div>
         <div class="actions">
-          <button class="done" ${doneToday ? "disabled" : ""}>
+          <button class="done" ${doneToday||freeze?"disabled":""}>
             ${doneToday ? "Zrobione ✔️" : "Zrobione dziś"}
           </button>
+          <button class="freeze">${freeze ? "⏸️" : "Freeze"}</button>
           <button class="delete">✕</button>
         </div>
       </div>
     `;
 
-    // dodaj kalendarz
+    // dodaj rozwijany kalendarz
     const calendarDiv = renderCalendar(h);
     div.appendChild(calendarDiv);
+    div.querySelector(".name").style.cursor="pointer";
+    div.querySelector(".name").onclick=()=>calendarDiv.querySelector(".calendar").classList.toggle("show");
 
-    // przycisk done
-    div.querySelector(".done").onclick = ()=>{
-      if(doneToday) return;
-
-      if(!h.datesDone) h.datesDone = [];
+    // done
+    div.querySelector(".done").onclick=()=>{
+      if(doneToday || freeze) return;
+      if(!h.datesDone) h.datesDone=[];
       h.datesDone.push(today());
-
-      if(h.lastDate && daysBetween(today(),h.lastDate)===1){
-        h.streak++;
-      }else{
-        h.streak=1;
-      }
-      h.lastDate = today();
+      if(h.lastDate && daysBetween(today(),h.lastDate)===1) h.streak++; else h.streak=1;
+      h.lastDate=today();
       save();
-
-      // animacja flash
       div.classList.add("flash");
       setTimeout(()=>div.classList.remove("flash"),500);
-
       render();
     };
 
-    // przycisk delete
-    div.querySelector(".delete").onclick = ()=>{
-      if(confirm("Usunąć tę passę?")){
-        div.classList.add("fade-out");
-        setTimeout(()=>{
-          habits.splice(i,1);
-          save();
-          render();
-        },500);
-      }
+    // delete
+    div.querySelector(".delete").onclick=()=>{
+      div.classList.add("fade-out");
+      setTimeout(()=>{
+        habits.splice(i,1);
+        save();
+        render();
+      },500);
+    };
+
+    // freeze
+    div.querySelector(".freeze").onclick=()=>{
+      h.freeze = !h.freeze;
+      save();
+      render();
     };
 
     list.appendChild(div);
   });
 }
 
-addBtn.onclick = ()=>{
-  const name = prompt("Nazwa nowej passy:");
+addBtn.onclick=()=>{
+  const name=prompt("Nazwa nowej passy:");
   if(!name) return;
-  habits.push({name, streak:0, lastDate:null, datesDone:[]});
+  habits.push({name, streak:0, lastDate:null, datesDone:[], freeze:false});
   save();
   render();
 };
