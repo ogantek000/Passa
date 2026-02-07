@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Passy z Potwierdzeniem i Freeze</title>
+<title>Passy z Kalendarzem i Freeze</title>
 
 <style>
 body {
@@ -39,13 +39,9 @@ h1 { text-align: center; }
   opacity: 1;
 }
 .habit.flash { animation: flash 0.5s; }
-@keyframes flash {
-  0% { background: #020617; }
-  50% { background: #22c55e; }
-  100% { background: #020617; }
-}
+@keyframes flash {0% {background:#020617;}50% {background:#22c55e;}100% {background:#020617;}}
 .habit.fade-out { animation: fadeOut 0.5s forwards; }
-@keyframes fadeOut { to { opacity: 0; transform: scale(0.8); } }
+@keyframes fadeOut { to {opacity:0; transform: scale(0.8);} }
 
 .habit-header {
   display: flex;
@@ -68,7 +64,6 @@ h1 { text-align: center; }
 .calendar-container { margin-top: 8px; }
 .calendar { display: flex; flex-wrap: wrap; overflow: hidden; max-height: 0; transition: max-height 0.3s ease; }
 .calendar.show { max-height: 400px; }
-.calendar.freeze-mode .day { background: #facc15 !important; color: black !important; }
 .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
 .day {
   width: 14.2%;
@@ -81,6 +76,8 @@ h1 { text-align: center; }
   background: #111827;
 }
 .day.done { background: #22c55e; color: black; }
+.day.freeze { background: #facc15; color: black; }
+.day.missed { background: #ef4444; color: white; }
 </style>
 </head>
 <body>
@@ -112,7 +109,6 @@ function renderCalendar(h, monthOffset=0){
 
   let refDate = new Date();
   refDate.setMonth(refDate.getMonth()+monthOffset);
-  const monthKey = refDate.toISOString().slice(0,7);
   title.textContent = refDate.toLocaleString('pl-PL',{month:'long', year:'numeric'});
 
   left.onclick = ()=>{ render(); renderCalendar(h, monthOffset-1); };
@@ -126,20 +122,21 @@ function renderCalendar(h, monthOffset=0){
   const calDiv = document.createElement("div");
   calDiv.className = "calendar show";
 
-  if(h.freeze) calDiv.classList.add("freeze-mode");
-
   const firstDay = new Date(refDate.getFullYear(), refDate.getMonth(),1).getDay();
   const daysInMonth = new Date(refDate.getFullYear(), refDate.getMonth()+1,0).getDate();
 
-  for(let i=0;i<firstDay;i++){
-    const empty = document.createElement("div"); empty.className="day"; calDiv.appendChild(empty);
-  }
+  // wypełnienie pustych dni na początku miesiąca
+  for(let i=0;i<firstDay;i++){ const empty = document.createElement("div"); empty.className="day"; calDiv.appendChild(empty); }
 
   for(let d=1;d<=daysInMonth;d++){
     const dayStr = `${refDate.getFullYear()}-${String(refDate.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dayDiv = document.createElement("div");
     dayDiv.className="day"; dayDiv.textContent=d;
-    if(h.datesDone && h.datesDone.includes(dayStr)) dayDiv.classList.add("done");
+
+    if(h.freezeDates && h.freezeDates.includes(dayStr)) dayDiv.classList.add("freeze");
+    else if(h.datesDone && h.datesDone.includes(dayStr)) dayDiv.classList.add("done");
+    else if(h.lastDate && new Date(dayStr) < new Date(h.lastDate)) dayDiv.classList.add("missed");
+
     calDiv.appendChild(dayDiv);
   }
 
@@ -180,6 +177,7 @@ function render(){
     const calendarDiv = renderCalendar(h);
     div.appendChild(calendarDiv);
 
+    // toggle kalendarza
     div.querySelector(".name").onclick=()=>calendarDiv.querySelector(".calendar").classList.toggle("show");
 
     // DONE z confirm
@@ -209,10 +207,12 @@ function render(){
       },500);
     };
 
-    // FREEZE z confirm i kalendarz żółty
+    // FREEZE z confirm + zaznaczenie dnia żółtym
     div.querySelector(".freeze").onclick=()=>{
       if(!confirm(`Czy na pewno chcesz ${freeze ? "odmrozić" : "zamrozić"} passę "${h.name}"?`)) return;
       h.freeze = !h.freeze;
+      if(!h.freezeDates) h.freezeDates=[];
+      if(h.freeze) h.freezeDates.push(today());
       save();
       render();
     };
@@ -224,7 +224,7 @@ function render(){
 addBtn.onclick=()=>{
   const name=prompt("Nazwa nowej passy:");
   if(!name) return;
-  habits.push({name, streak:0, lastDate:null, datesDone:[], freeze:false});
+  habits.push({name, streak:0, lastDate:null, datesDone:[], freeze:false, freezeDates:[]});
   save();
   render();
 };
