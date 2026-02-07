@@ -61,10 +61,29 @@ h1 { text-align: center; }
 .done { background: #22c55e; }
 .delete { background: #ef4444; color: white; }
 .freeze { background: #facc15; color: black; }
+.toggle-cal {
+  background: #3b82f6;
+  color: white;
+  margin-top: 8px;
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
 .calendar-container { margin-top: 8px; }
 .calendar { display: flex; flex-wrap: wrap; overflow: hidden; max-height: 0; transition: max-height 0.3s ease; }
 .calendar.show { max-height: 400px; }
 .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.calendar-header button {
+  background: #1e293b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 12px;
+  cursor: pointer;
+}
 .day {
   width: 14.2%;
   height: 24px;
@@ -111,8 +130,8 @@ function renderCalendar(h, monthOffset=0){
   refDate.setMonth(refDate.getMonth()+monthOffset);
   title.textContent = refDate.toLocaleString('pl-PL',{month:'long', year:'numeric'});
 
-  left.onclick = ()=>{ render(); renderCalendar(h, monthOffset-1); };
-  right.onclick = ()=>{ render(); renderCalendar(h, monthOffset+1); };
+  left.onclick = ()=>{ render(); };
+  right.onclick = ()=>{ render(); };
 
   calHeader.appendChild(left);
   calHeader.appendChild(title);
@@ -120,27 +139,40 @@ function renderCalendar(h, monthOffset=0){
   container.appendChild(calHeader);
 
   const calDiv = document.createElement("div");
-  calDiv.className = "calendar show";
+  calDiv.className = "calendar";
 
   const firstDay = new Date(refDate.getFullYear(), refDate.getMonth(),1).getDay();
   const daysInMonth = new Date(refDate.getFullYear(), refDate.getMonth()+1,0).getDate();
 
   // wypełnienie pustych dni na początku miesiąca
-  for(let i=0;i<firstDay;i++){ const empty = document.createElement("div"); empty.className="day"; calDiv.appendChild(empty); }
+  for(let i=0;i<(firstDay===0?6:firstDay-1);i++){ 
+    const empty = document.createElement("div"); 
+    empty.className="day"; 
+    calDiv.appendChild(empty); 
+  }
 
   for(let d=1;d<=daysInMonth;d++){
     const dayStr = `${refDate.getFullYear()}-${String(refDate.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dayDiv = document.createElement("div");
     dayDiv.className="day"; dayDiv.textContent=d;
 
-    if(h.freezeDates && h.freezeDates.includes(dayStr)) dayDiv.classList.add("freeze");
-    else if(h.datesDone && h.datesDone.includes(dayStr)) dayDiv.classList.add("done");
-    else if(h.lastDate && new Date(dayStr) < new Date(h.lastDate)) dayDiv.classList.add("missed");
+    const isFreeze = h.freezeDates && h.freezeDates.includes(dayStr);
+    const isDone = h.datesDone && h.datesDone.includes(dayStr);
+    const isMissed = h.lastDate && new Date(dayStr) < new Date(h.lastDate) && !isDone && !isFreeze;
+
+    if(isFreeze) {
+      dayDiv.classList.add("freeze");
+    } else if(isDone) {
+      dayDiv.classList.add("done");
+    } else if(isMissed) {
+      dayDiv.classList.add("missed");
+    }
 
     calDiv.appendChild(dayDiv);
   }
 
   container.appendChild(calDiv);
+  container.monthOffset = monthOffset;
   return container;
 }
 
@@ -174,11 +206,54 @@ function render(){
       </div>
     `;
 
-    const calendarDiv = renderCalendar(h);
+    const toggleBtn = document.createElement("button");
+    toggleBtn.className = "toggle-cal";
+    toggleBtn.textContent = "📅 Pokaż kalendarz";
+    div.appendChild(toggleBtn);
+
+    let calendarDiv = renderCalendar(h, 0);
     div.appendChild(calendarDiv);
 
     // toggle kalendarza
-    div.querySelector(".name").onclick=()=>calendarDiv.querySelector(".calendar").classList.toggle("show");
+    toggleBtn.onclick=()=>{
+      const cal = calendarDiv.querySelector(".calendar");
+      cal.classList.toggle("show");
+      toggleBtn.textContent = cal.classList.contains("show") ? "📅 Ukryj kalendarz" : "📅 Pokaż kalendarz";
+    };
+
+    // Obsługa przycisków nawigacji miesiąca
+    const leftBtn = calendarDiv.querySelector(".calendar-header button:first-child");
+    const rightBtn = calendarDiv.querySelector(".calendar-header button:last-child");
+    
+    leftBtn.onclick = () => {
+      const newCalendar = renderCalendar(h, calendarDiv.monthOffset - 1);
+      div.replaceChild(newCalendar, calendarDiv);
+      calendarDiv = newCalendar;
+      if(toggleBtn.textContent.includes("Ukryj")) {
+        calendarDiv.querySelector(".calendar").classList.add("show");
+      }
+      
+      // Ponownie podpinamy eventy
+      const newLeftBtn = calendarDiv.querySelector(".calendar-header button:first-child");
+      const newRightBtn = calendarDiv.querySelector(".calendar-header button:last-child");
+      newLeftBtn.onclick = leftBtn.onclick;
+      newRightBtn.onclick = rightBtn.onclick;
+    };
+    
+    rightBtn.onclick = () => {
+      const newCalendar = renderCalendar(h, calendarDiv.monthOffset + 1);
+      div.replaceChild(newCalendar, calendarDiv);
+      calendarDiv = newCalendar;
+      if(toggleBtn.textContent.includes("Ukryj")) {
+        calendarDiv.querySelector(".calendar").classList.add("show");
+      }
+      
+      // Ponownie podpinamy eventy
+      const newLeftBtn = calendarDiv.querySelector(".calendar-header button:first-child");
+      const newRightBtn = calendarDiv.querySelector(".calendar-header button:last-child");
+      newLeftBtn.onclick = leftBtn.onclick;
+      newRightBtn.onclick = rightBtn.onclick;
+    };
 
     // DONE z confirm
     div.querySelector(".done").onclick=()=>{
