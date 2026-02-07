@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Keepy - Keep Going</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🔥</text></svg>">
 
 <style>
 body {
@@ -13,7 +14,23 @@ body {
   margin: 0;
   padding: 16px;
 }
-h1 { text-align: center; }
+h1 { 
+  text-align: center; 
+  margin-bottom: 4px;
+}
+.motto {
+  text-align: center;
+  font-size: 14px;
+  color: #94a3b8;
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+h2 {
+  text-align: center;
+  font-size: 20px;
+  margin-top: 24px;
+  margin-bottom: 16px;
+}
 .add {
   position: fixed;
   bottom: 24px;
@@ -38,7 +55,7 @@ h1 { text-align: center; }
   transition: all 0.3s ease;
   opacity: 1;
 }
-.habit.flash { animation: fadeIn 0.5s; }
+.habit.flash { animation: flash 0.5s; }
 @keyframes flash {0% {background:#020617;}50% {background:#22c55e;}100% {background:#020617;}}
 .habit.fade-out { animation: fadeOut 0.5s forwards; }
 @keyframes fadeOut { to {opacity:0; transform: scale(0.8);} }
@@ -101,7 +118,9 @@ h1 { text-align: center; }
 </head>
 <body>
 
-<h1>🔥 Moje passy</h1>
+<h1>Keepy</h1>
+<p class="motto">Keep Going</p>
+<h2>🔥 Moje passy</h2>
 <div id="list"></div>
 <button class="add" id="addBtn">+</button>
 
@@ -115,9 +134,9 @@ const yesterday = () => {
   return d.toISOString().slice(0,10);
 };
 
-let habits = JSON.parse(localStorage.getItem("habits")) || [];
+let habits = JSON.parse(localStorage.getItem("keepy-habits")) || [];
 
-function save(){ localStorage.setItem("habits", JSON.stringify(habits)); }
+function save(){ localStorage.setItem("keepy-habits", JSON.stringify(habits)); }
 function daysBetween(a,b){ return Math.floor((new Date(a)-new Date(b))/86400000); }
 
 function wasYesterdayValid(h) {
@@ -368,4 +387,3 @@ render();
 
 </body>
 </html>
-
