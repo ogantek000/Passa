@@ -13,157 +13,100 @@ body {
   margin: 0;
   padding: 16px;
 }
-.header {
-  text-align: center;
-  margin-bottom: 16px;
-}
-.mascot {
-  width: 240px;
-  height: 240px;
-  margin: 0 auto 12px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-h1 {
-  margin: 8px 0 4px;
-  font-size: 28px;
-  color: #3b82f6;
-}
-.motto {
-  font-size: 14px;
-  color: #94a3b8;
-  margin: 0 0 8px;
-}
-h2 {
-  font-size: 20px;
-  margin: 12px 0;
-}
+.header { text-align: center; margin-bottom: 16px; }
+.mascot { width: 240px; height: 240px; margin: 0 auto 12px; border-radius: 50%; object-fit: cover; }
+h1 { margin: 8px 0 4px; font-size: 28px; color: #3b82f6; }
+.motto { font-size: 14px; color: #94a3b8; margin: 0 0 8px; }
+h2 { font-size: 20px; margin: 12px 0; }
+
 .add {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  width: 56px;
-  height: 56px;
-  border-radius: 28px;
-  background: #22c55e;
-  color: black;
-  font-size: 32px;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
+  position: fixed; bottom: 24px; right: 24px;
+  width: 56px; height: 56px; border-radius: 28px;
+  background: #22c55e; color: black; font-size: 32px;
+  border: none; font-weight: bold; cursor: pointer;
   transition: transform 0.15s ease;
 }
 .add:active { transform: scale(0.95); }
+
 .habit {
-  background: rgba(255,255,255,0.05);
-  padding: 16px;
-  border-radius: 14px;
-  margin-bottom: 12px;
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, background 0.25s ease;
-  opacity: 0;
-  transform: translateY(20px);
+  background: rgba(255,255,255,0.05); padding: 16px; border-radius: 14px;
+  margin-bottom: 12px; display: flex; flex-direction: column;
+  transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease, background 0.6s ease;
+  opacity: 0; transform: translateY(20px);
 }
-.habit.show {
-  opacity: 1;
-  transform: translateY(0);
+.habit.show { opacity: 1; transform: translateY(0); }
+
+.habit.ice {
+  background: linear-gradient(135deg, #22c55e, #3b82f6) !important;
+  animation: iceAnim 0.8s ease forwards;
 }
-.habit-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+@keyframes iceAnim {
+  0% { background: rgba(255,255,255,0.05); }
+  30% { background: #3b82f6; }
+  60% { background: #22c55e; }
+  100% { background: rgba(255,255,255,0.05); }
 }
+
+.habit-header { display: flex; justify-content: space-between; align-items: center; }
 .name { font-size: 18px; cursor: pointer; }
 .streak { font-size: 20px; font-weight:bold; color:#ff9500; }
+
 .actions button {
-  margin-left: 6px;
-  border: none;
-  border-radius: 8px;
-  padding: 6px 10px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: transform 0.1s ease;
+  margin-left: 6px; border: none; border-radius: 8px; padding: 6px 10px;
+  font-size: 14px; cursor: pointer; transition: transform 0.1s ease;
 }
 .actions button:active { transform: scale(0.95); }
 .done { background: #22c55e; }
 .delete { background: #ef4444; color: white; }
 .freeze { background: #facc15; color: black; }
+
 .toggle-cal {
-  background: #3b82f6;
-  color: white;
-  margin-top: 8px;
-  width: 100%;
-  padding: 8px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: transform 0.1s ease;
+  background: #3b82f6; color: white; margin-top: 8px; width: 100%;
+  padding: 8px; border: none; border-radius: 8px; cursor: pointer;
+  font-size: 14px; transition: transform 0.1s ease;
 }
 .toggle-cal:active { transform: scale(0.97); }
+
 .progress-container {
-  background: rgba(255,255,255,0.05);
-  border-radius: 12px;
-  height: 8px;
-  margin-top: 8px;
-  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05); border-radius: 12px; height: 8px;
+  margin-top: 8px; border: 1px solid rgba(255,255,255,0.1);
 }
 .progress {
-  height: 8px;
-  background: #3b82f6;
-  border-radius: 12px;
-  width: 0%;
-  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 8px; background: #3b82f6; border-radius: 12px; width: 0%;
+  transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
 }
+
 .calendar-container { margin-top: 8px; }
-.calendar { 
-  display: flex; 
-  flex-wrap: wrap; 
-  overflow: hidden; 
-  max-height: 0; 
-  opacity: 0; 
-  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
+.calendar {
+  display: flex; flex-wrap: wrap; overflow: hidden; max-height: 0; opacity: 0;
+  transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease;
 }
-.calendar.show {
-  max-height: 400px; 
-  opacity: 1;
+.calendar.show { max-height: 400px; opacity: 1; }
+
+.calendar-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 4px; visibility:hidden;
 }
-.calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; visibility:hidden; }
 .calendar-header button {
-  background: #1e293b;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 4px 12px;
-  cursor: pointer;
+  background: #1e293b; color: white; border: none; border-radius: 4px;
+  padding: 4px 12px; cursor: pointer;
 }
 .calendar.show .calendar-header { visibility: visible; }
+
 .day {
-  width: 14.2%;
-  height: 28px;
-  margin-bottom: 2px;
-  text-align: center;
-  line-height: 28px;
-  font-size: 12px;
-  border-radius: 6px;
-  background: #111827;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
+  width: 14.2%; height: 28px; margin-bottom: 2px; text-align: center;
+  line-height: 28px; font-size: 12px; border-radius: 6px;
+  background: #111827; cursor: pointer; transition: background 0.2s, transform 0.1s;
 }
 .day:hover { transform: scale(1.05); }
 .day.done { background: #22c55e; color: black; }
 .day.freeze { background: #facc15; color: black; }
 .day.missed { background: #ef4444; color: white; }
+
 #stats {
-  margin-bottom:16px;
-  display:flex;
-  justify-content:space-around;
-  text-align:center;
-  background: rgba(255,255,255,0.05);
-  padding:12px;
-  border-radius:14px;
-  border: 1px solid rgba(255,255,255,0.1);
+  margin-bottom:16px; display:flex; justify-content:space-around;
+  text-align:center; background: rgba(255,255,255,0.05);
+  padding:12px; border-radius:14px; border: 1px solid rgba(255,255,255,0.1);
 }
 #stats div { flex:1; }
 #stats div div:first-child { font-size:14px; color:#94a3b8; }
@@ -180,26 +123,17 @@ h2 {
 </div>
 
 <div id="stats">
-  <div>
-    <div>Dni wykonane</div>
-    <div id="totalDone">0</div>
-  </div>
-  <div>
-    <div>Najdłuższa passa</div>
-    <div id="maxStreak">0</div>
-  </div>
-  <div>
-    <div>Średnia dzienna</div>
-    <div id="averageDaily">0</div>
-  </div>
+  <div><div>Dni wykonane</div><div id="totalDone">0</div></div>
+  <div><div>Najdłuższa passa</div><div id="maxStreak">0</div></div>
+  <div><div>Średnia dzienna</div><div id="averageDaily">0</div></div>
 </div>
 
 <div id="list"></div>
 <button class="add" id="addBtn">+</button>
 
 <script>
-const list = document.getElementById("list");
-const addBtn = document.getElementById("addBtn");
+const list=document.getElementById("list");
+const addBtn=document.getElementById("addBtn");
 const today = () => new Date().toISOString().slice(0,10);
 
 let habits = JSON.parse(localStorage.getItem("keepy-habits")) || [];
@@ -212,76 +146,64 @@ function save(){
 
 function updateStats(){
   const doneDates = {};
-  let maxStreak = 0;
-  let totalDone = 0;
-
+  let maxStreak = 0, totalDone=0;
   habits.forEach(h=>{
-    if(h.datesDone){
-      h.datesDone.forEach(d=>{ doneDates[d]=(doneDates[d]||0)+1; });
-      totalDone += h.datesDone.length;
-    }
+    if(h.datesDone) { h.datesDone.forEach(d=>{ doneDates[d]=(doneDates[d]||0)+1; }); totalDone += h.datesDone.length; }
     if(h.streak>maxStreak) maxStreak=h.streak;
   });
-
   const totalDays = Object.keys(doneDates).length || 1;
-  const averageDaily = (totalDone/totalDays).toFixed(2);
-
-  document.getElementById("totalDone").textContent = totalDone;
-  document.getElementById("maxStreak").textContent = maxStreak;
-  document.getElementById("averageDaily").textContent = averageDaily;
+  document.getElementById("totalDone").textContent=totalDone;
+  document.getElementById("maxStreak").textContent=maxStreak;
+  document.getElementById("averageDaily").textContent=(totalDone/totalDays).toFixed(2);
 }
 
-function renderCalendar(h, monthOffset=0){
-  const container = document.createElement("div");
-  container.className = "calendar-container";
+function renderCalendar(h,monthOffset=0){
+  const container=document.createElement("div");
+  container.className="calendar-container";
+  const calHeader=document.createElement("div");
+  calHeader.className="calendar-header";
 
-  const calHeader = document.createElement("div");
-  calHeader.className = "calendar-header";
+  const left=document.createElement("button"); left.textContent="<";
+  const right=document.createElement("button"); right.textContent=">";
+  const title=document.createElement("span");
 
-  const left = document.createElement("button"); left.textContent="<"; left.disabled=true;
-  const right = document.createElement("button"); right.textContent=">"; right.disabled=true;
-  const title = document.createElement("span");
-
-  let refDate = new Date();
+  let refDate=new Date();
   refDate.setMonth(refDate.getMonth()+monthOffset);
-  title.textContent = refDate.toLocaleString('pl-PL',{month:'long', year:'numeric'});
+  title.textContent=refDate.toLocaleString('pl-PL',{month:'long',year:'numeric'});
 
   calHeader.appendChild(left); calHeader.appendChild(title); calHeader.appendChild(right);
   container.appendChild(calHeader);
 
-  const calDiv = document.createElement("div"); calDiv.className="calendar";
+  const calDiv=document.createElement("div"); calDiv.className="calendar";
 
-  const firstDay = (new Date(refDate.getFullYear(), refDate.getMonth(),1).getDay()+6)%7;
-  const daysInMonth = new Date(refDate.getFullYear(), refDate.getMonth()+1,0).getDate();
+  const firstDay=(new Date(refDate.getFullYear(),refDate.getMonth(),1).getDay()+6)%7;
+  const daysInMonth=new Date(refDate.getFullYear(),refDate.getMonth()+1,0).getDate();
 
   for(let i=0;i<firstDay;i++){ const empty=document.createElement("div"); empty.className="day"; calDiv.appendChild(empty); }
 
-  for(let d=1; d<=daysInMonth; d++){
-    const dayStr = `${refDate.getFullYear()}-${String(refDate.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const dayDiv = document.createElement("div");
-    dayDiv.className="day"; dayDiv.textContent=d;
-
+  for(let d=1;d<=daysInMonth;d++){
+    const dayStr=`${refDate.getFullYear()}-${String(refDate.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayDiv=document.createElement("div"); dayDiv.className="day"; dayDiv.textContent=d;
     const isDone = h.datesDone && h.datesDone.includes(dayStr);
     const isFreeze = h.freezeDates && h.freezeDates.includes(dayStr) && !isDone;
     let isMissed=false;
-
-    if(!isDone && !isFreeze){
+    if(!isDone&&!isFreeze){
       const allValid=[...(h.datesDone||[]),...(h.freezeDates||[])].sort();
       if(allValid.length>0){
         const latest=allValid[allValid.length-1];
         if(new Date(dayStr)<new Date(latest) && new Date(dayStr)<new Date()) isMissed=true;
       }
     }
-
     if(isDone) dayDiv.classList.add("done");
     else if(isFreeze) dayDiv.classList.add("freeze");
     else if(isMissed) dayDiv.classList.add("missed");
 
-    dayDiv.onclick = () => {
+    dayDiv.onclick = ()=>{
+      if(h.freeze) return; // blokada zamrożonych
       if(isDone) h.datesDone=h.datesDone.filter(d=>d!==dayStr);
       else { if(!h.datesDone) h.datesDone=[]; h.datesDone.push(dayStr);}
       save(); render();
-    }
+    };
 
     calDiv.appendChild(dayDiv);
   }
@@ -295,8 +217,8 @@ function renderCalendar(h, monthOffset=0){
   return container;
 }
 
-function renderCalendarAndReplace(habit, oldContainer, offset){
-  const newCal=renderCalendar(habit, oldContainer.monthOffset+offset);
+function renderCalendarAndReplace(habit,oldContainer,offset){
+  const newCal=renderCalendar(habit,oldContainer.monthOffset+offset);
   oldContainer.replaceWith(newCal);
 }
 
@@ -304,86 +226,70 @@ function render(){
   list.innerHTML="";
   habits.forEach((h,i)=>{
     const div=document.createElement("div"); div.className="habit";
-
     const doneToday = h.datesDone && h.datesDone.includes(today());
     const freeze = h.freeze===true;
 
-    div.innerHTML = `
-      <div class="habit-header">
-        <div>
-          <div class="name">${h.name}</div>
-          <div class="streak">🔥 ${h.streak}</div>
-        </div>
-        <div class="actions">
-          <button class="done" ${doneToday||freeze?"disabled":""}>
-            ${doneToday ? "Zrobione ✔️" : "Zrobione dziś"}
-          </button>
-          <button class="freeze">${freeze ? "⏸️" : "Freeze"}</button>
-          <button class="delete">✕</button>
-        </div>
+    div.innerHTML=`<div class="habit-header">
+      <div><div class="name">${h.name}</div><div class="streak">🔥 ${h.streak}</div></div>
+      <div class="actions">
+        <button class="done" ${doneToday||freeze?"disabled":""}>${doneToday ? "Zrobione ✔️" : "Zrobione dziś"}</button>
+        <button class="freeze">${freeze?"⏸️":"Freeze"}</button>
+        <button class="delete">✕</button>
       </div>
-      <div class="progress-container">
-        <div class="progress" style="width:${Math.min((h.streak/30)*100,100)}%"></div>
-      </div>
-    `;
+    </div>
+    <div class="progress-container">
+      <div class="progress" style="width:${Math.min((h.streak/30)*100,100)}%"></div>
+    </div>`;
 
-    const toggleBtn=document.createElement("button");
-    toggleBtn.className="toggle-cal";
-    toggleBtn.textContent="📅 Pokaż kalendarz";
-    div.appendChild(toggleBtn);
+    const toggleBtn=document.createElement("button"); toggleBtn.className="toggle-cal";
+    toggleBtn.textContent="📅 Pokaż kalendarz"; div.appendChild(toggleBtn);
 
-    let calendarDiv=renderCalendar(h,0);
-    div.appendChild(calendarDiv);
+    let calendarDiv=renderCalendar(h,0); div.appendChild(calendarDiv);
 
-    toggleBtn.onclick=()=> {
-      const cal=calendarDiv.querySelector(".calendar");
+    toggleBtn.onclick = ()=>{
+      const cal = calendarDiv.querySelector(".calendar");
       cal.classList.toggle("show");
-      toggleBtn.textContent = cal.classList.contains("show") ? "📅 Ukryj kalendarz" : "📅 Pokaż kalendarz";
-      const btns=calendarDiv.querySelectorAll(".calendar-header button");
-      btns.forEach(b=>b.disabled=!cal.classList.contains("show"));
+      toggleBtn.textContent= cal.classList.contains("show")?"📅 Ukryj kalendarz":"📅 Pokaż kalendarz";
     };
 
-    div.querySelector(".done").onclick=()=>{
-      if(freeze || doneToday) return;
+    div.querySelector(".done").onclick = ()=>{
+      if(freeze||doneToday) return;
       if(!h.datesDone) h.datesDone=[];
       h.datesDone.push(today());
       h.streak = Math.max(h.streak+1,1);
       h.lastDate=today();
-      save();
-      render();
+      save(); render();
     };
 
-    div.querySelector(".delete").onclick=()=>{
+    div.querySelector(".delete").onclick = ()=>{
       if(!confirm(`Czy napewno chcesz usunąć passę "${h.name}"?`)) return;
-      archive.push(h);
-      habits.splice(i,1);
-      save();
-      render();
+      archive.push(h); habits.splice(i,1); save(); render();
     };
 
-    div.querySelector(".freeze").onclick=()=>{
+    div.querySelector(".freeze").onclick = ()=>{
       if(!confirm(`Czy napewno chcesz zamrozić/odmrozić passę "${h.name}"?`)) return;
-      h.freeze = !h.freeze;
-      if(!h.freezeDates) h.freezeDates=[];
+      h.freeze=!h.freeze; if(!h.freezeDates) h.freezeDates=[];
       if(h.freeze) h.freezeDates.push(today());
       if(!h.lastDate || new Date(today())>new Date(h.lastDate)) h.lastDate=today();
-      save();
-      render();
+
+      // bardzo płynna animacja lodu
+      div.classList.add("ice");
+      setTimeout(()=>div.classList.remove("ice"), 800);
+
+      save(); render();
     };
 
     list.appendChild(div);
     setTimeout(()=>div.classList.add("show"),10);
   });
-
   updateStats();
 }
 
 addBtn.onclick=()=>{
   const name=prompt("Nazwa nowej passy:");
   if(name && name.trim()!==""){
-    habits.push({name:name.trim(), streak:0, lastDate:null, datesDone:[], freeze:false, freezeDates:[]});
-    save();
-    render();
+    habits.push({name:name.trim(),streak:0,lastDate:null,datesDone:[],freeze:false,freezeDates:[]});
+    save(); render();
   }
 };
 
