@@ -1,32 +1,146 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Passy z Kalendarzem</title>
+
+<style>
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #0f172a;
+    color: white;
+    margin: 0;
+    padding: 16px;
+  }
+  h1 {
+    text-align: center;
+  }
+  .add {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #22c55e;
+    color: black;
+    font-size: 32px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .habit {
+    background: #020617;
+    padding: 16px;
+    border-radius: 14px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+    opacity: 1;
+  }
+  .habit.flash {
+    animation: flash 0.5s;
+  }
+  @keyframes flash {
+    0% { background: #020617; }
+    50% { background: #22c55e; }
+    100% { background: #020617; }
+  }
+  .habit.fade-out {
+    animation: fadeOut 0.5s forwards;
+  }
+  @keyframes fadeOut {
+    to { opacity: 0; transform: scale(0.8); }
+  }
+  .habit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .name {
+    font-size: 18px;
+  }
+  .streak {
+    font-size: 22px;
+  }
+  .actions button {
+    margin-left: 6px;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .done { background: #22c55e; }
+  .delete { background: #ef4444; color: white; }
+  .calendar {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .day {
+    width: 14.2%;
+    height: 24px;
+    margin-bottom: 2px;
+    text-align: center;
+    line-height: 24px;
+    font-size: 12px;
+    border-radius: 4px;
+    background: #111827;
+  }
+  .day.done { background: #22c55e; color: black; }
+</style>
+</head>
+<body>
+
+<h1>🔥 Moje passy</h1>
+<div id="list"></div>
+
+<button class="add" id="addBtn">+</button>
+
 <script>
-  const list = document.getElementById("list");
-  const addBtn = document.getElementById("addBtn");
+const list = document.getElementById("list");
+const addBtn = document.getElementById("addBtn");
+const today = () => new Date().toISOString().slice(0,10);
 
-  const today = () => new Date().toISOString().slice(0,10);
-  let habits = JSON.parse(localStorage.getItem("habits")) || [];
+let habits = JSON.parse(localStorage.getItem("habits")) || [];
 
-  function daysBetween(a, b) {
-    return Math.floor((new Date(a) - new Date(b)) / 86400000);
+function save() {
+  localStorage.setItem("habits", JSON.stringify(habits));
+}
+
+function daysBetween(a,b) {
+  return Math.floor((new Date(a)-new Date(b))/86400000);
+}
+
+function renderCalendar(h) {
+  const calendarDiv = document.createElement("div");
+  calendarDiv.className = "calendar";
+  const currentMonth = new Date().toISOString().slice(0,7); // YYYY-MM
+  for(let d=1; d<=31; d++){
+    const dayStr = `${currentMonth}-${String(d).padStart(2,'0')}`;
+    const dayDiv = document.createElement("div");
+    dayDiv.className = "day";
+    dayDiv.textContent = d;
+    if(h.datesDone && h.datesDone.includes(dayStr)) dayDiv.classList.add("done");
+    calendarDiv.appendChild(dayDiv);
   }
+  return calendarDiv;
+}
 
-  function save() {
-    localStorage.setItem("habits", JSON.stringify(habits));
-  }
+function render() {
+  list.innerHTML = "";
 
-  function render() {
-    list.innerHTML = "";
+  habits.forEach((h,i)=>{
+    const div = document.createElement("div");
+    div.className = "habit";
 
-    habits.forEach((h, i) => {
-      if (h.lastDate) {
-        const diff = daysBetween(today(), h.lastDate);
-        if (diff > 1) h.streak = 0;
-      }
+    const doneToday = h.lastDate === today();
 
-      const doneToday = h.lastDate === today();
-
-      const div = document.createElement("div");
-      div.className = "habit";
-      div.innerHTML = `
+    div.innerHTML = `
+      <div class="habit-header">
         <div>
           <div class="name">${h.name}</div>
           <div class="streak">🔥 ${h.streak}</div>
@@ -37,42 +151,61 @@
           </button>
           <button class="delete">✕</button>
         </div>
-      `;
+      </div>
+    `;
 
-      div.querySelector(".done").onclick = () => {
-        if (doneToday) return;
+    // dodaj kalendarz
+    const calendarDiv = renderCalendar(h);
+    div.appendChild(calendarDiv);
 
-        if (h.lastDate && daysBetween(today(), h.lastDate) === 1) {
-          h.streak++;
-        } else {
-          h.streak = 1;
-        }
+    // przycisk done
+    div.querySelector(".done").onclick = ()=>{
+      if(doneToday) return;
 
-        h.lastDate = today();
-        save();
-        render();
-      };
+      if(!h.datesDone) h.datesDone = [];
+      h.datesDone.push(today());
 
-      div.querySelector(".delete").onclick = () => {
-        if (confirm("Usunąć tę passę?")) {
-          habits.splice(i, 1);
+      if(h.lastDate && daysBetween(today(),h.lastDate)===1){
+        h.streak++;
+      }else{
+        h.streak=1;
+      }
+      h.lastDate = today();
+      save();
+
+      // animacja flash
+      div.classList.add("flash");
+      setTimeout(()=>div.classList.remove("flash"),500);
+
+      render();
+    };
+
+    // przycisk delete
+    div.querySelector(".delete").onclick = ()=>{
+      if(confirm("Usunąć tę passę?")){
+        div.classList.add("fade-out");
+        setTimeout(()=>{
+          habits.splice(i,1);
           save();
           render();
-        }
-      };
+        },500);
+      }
+    };
 
-      list.appendChild(div);
-    });
-  }
+    list.appendChild(div);
+  });
+}
 
-  addBtn.onclick = () => {
-    const name = prompt("Nazwa nowej passy:");
-    if (!name) return;
-
-    habits.push({ name, streak: 0, lastDate: null });
-    save();
-    render();
-  };
-
+addBtn.onclick = ()=>{
+  const name = prompt("Nazwa nowej passy:");
+  if(!name) return;
+  habits.push({name, streak:0, lastDate:null, datesDone:[]});
+  save();
   render();
+};
+
+render();
 </script>
+
+</body>
+</html>
