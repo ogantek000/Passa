@@ -109,11 +109,24 @@ h1 { text-align: center; }
 const list = document.getElementById("list");
 const addBtn = document.getElementById("addBtn");
 const today = () => new Date().toISOString().slice(0,10);
+const yesterday = () => {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().slice(0,10);
+};
 
 let habits = JSON.parse(localStorage.getItem("habits")) || [];
 
 function save(){ localStorage.setItem("habits", JSON.stringify(habits)); }
 function daysBetween(a,b){ return Math.floor((new Date(a)-new Date(b))/86400000); }
+
+function wasYesterdayValid(h) {
+  const yesterdayStr = yesterday();
+  // Sprawdź czy wczoraj było done lub freeze
+  const yesterdayDone = h.datesDone && h.datesDone.includes(yesterdayStr);
+  const yesterdayFreeze = h.freezeDates && h.freezeDates.includes(yesterdayStr);
+  return yesterdayDone || yesterdayFreeze;
+}
 
 function renderCalendar(h, monthOffset=0){
   const container = document.createElement("div");
@@ -158,7 +171,26 @@ function renderCalendar(h, monthOffset=0){
 
     const isFreeze = h.freezeDates && h.freezeDates.includes(dayStr);
     const isDone = h.datesDone && h.datesDone.includes(dayStr);
-    const isMissed = h.lastDate && new Date(dayStr) < new Date(h.lastDate) && !isDone && !isFreeze;
+    
+    // Dzień jest missed tylko jeśli:
+    // 1. Jest przed ostatnim done/freeze
+    // 2. Sam nie jest done ani freeze
+    let isMissed = false;
+    if (!isDone && !isFreeze) {
+      // Znajdź wszystkie daty z done i freeze
+      const allValidDates = [
+        ...(h.datesDone || []),
+        ...(h.freezeDates || [])
+      ].sort();
+      
+      // Jeśli są jakieś daty i ten dzień jest przed najnowszą
+      if (allValidDates.length > 0) {
+        const latestValidDate = allValidDates[allValidDates.length - 1];
+        if (new Date(dayStr) < new Date(latestValidDate) && new Date(dayStr) < new Date()) {
+          isMissed = true;
+        }
+      }
+    }
 
     if(isFreeze) {
       dayDiv.classList.add("freeze");
@@ -179,9 +211,25 @@ function renderCalendar(h, monthOffset=0){
 function render(){
   list.innerHTML="";
   habits.forEach((h,i)=>{
+    // Aktualizacja streak - sprawdź czy nie jest zerwany
     if(!h.freeze && h.lastDate){
       const diff = daysBetween(today(), h.lastDate);
-      if(diff>=2) h.streak=0;
+      if(diff>=2) {
+        // Sprawdź czy między lastDate a dzisiaj były freeze
+        let allDaysCovered = true;
+        for(let d=1; d<diff; d++){
+          const checkDate = new Date(h.lastDate);
+          checkDate.setDate(checkDate.getDate() + d);
+          const checkStr = checkDate.toISOString().slice(0,10);
+          const hasFreeze = h.freezeDates && h.freezeDates.includes(checkStr);
+          const hasDone = h.datesDone && h.datesDone.includes(checkStr);
+          if(!hasFreeze && !hasDone) {
+            allDaysCovered = false;
+            break;
+          }
+        }
+        if(!allDaysCovered) h.streak = 0;
+      }
     }
 
     const div = document.createElement("div");
@@ -233,7 +281,6 @@ function render(){
         calendarDiv.querySelector(".calendar").classList.add("show");
       }
       
-      // Ponownie podpinamy eventy
       const newLeftBtn = calendarDiv.querySelector(".calendar-header button:first-child");
       const newRightBtn = calendarDiv.querySelector(".calendar-header button:last-child");
       newLeftBtn.onclick = leftBtn.onclick;
@@ -248,7 +295,6 @@ function render(){
         calendarDiv.querySelector(".calendar").classList.add("show");
       }
       
-      // Ponownie podpinamy eventy
       const newLeftBtn = calendarDiv.querySelector(".calendar-header button:first-child");
       const newRightBtn = calendarDiv.querySelector(".calendar-header button:last-child");
       newLeftBtn.onclick = leftBtn.onclick;
@@ -263,7 +309,14 @@ function render(){
 
       if(!h.datesDone) h.datesDone=[];
       h.datesDone.push(today());
-      if(h.lastDate && daysBetween(today(),h.lastDate)===1) h.streak++; else h.streak=1;
+      
+      // Zwiększ streak jeśli wczoraj było done lub freeze
+      if(wasYesterdayValid(h)) {
+        h.streak++;
+      } else {
+        h.streak = 1;
+      }
+      
       h.lastDate=today();
       save();
       div.classList.add("flash");
@@ -287,7 +340,13 @@ function render(){
       if(!confirm(`Czy na pewno chcesz ${freeze ? "odmrozić" : "zamrozić"} passę "${h.name}"?`)) return;
       h.freeze = !h.freeze;
       if(!h.freezeDates) h.freezeDates=[];
-      if(h.freeze) h.freezeDates.push(today());
+      if(h.freeze) {
+        h.freezeDates.push(today());
+        // Aktualizuj lastDate gdy zamrażamy
+        if(!h.lastDate || new Date(today()) > new Date(h.lastDate)) {
+          h.lastDate = today();
+        }
+      }
       save();
       render();
     };
