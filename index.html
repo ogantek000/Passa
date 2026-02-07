@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Passy z Kalendarzem i Freeze</title>
+<title>Keepy - Keep Going</title>
 
 <style>
 body {
@@ -38,7 +38,7 @@ h1 { text-align: center; }
   transition: all 0.3s ease;
   opacity: 1;
 }
-.habit.flash { animation: flash 0.5s; }
+.habit.flash { animation: fadeIn 0.5s; }
 @keyframes flash {0% {background:#020617;}50% {background:#22c55e;}100% {background:#020617;}}
 .habit.fade-out { animation: fadeOut 0.5s forwards; }
 @keyframes fadeOut { to {opacity:0; transform: scale(0.8);} }
@@ -368,3 +368,4 @@ render();
 
 </body>
 </html>
+
