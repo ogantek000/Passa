@@ -18,8 +18,8 @@ body {
   margin-bottom: 24px;
 }
 .mascot {
-  width: 120px;
-  height: 120px;
+  width: 200px;
+  height: 200px;
   margin: 0 auto 12px;
   display: block;
   border-radius: 50%;
@@ -27,15 +27,15 @@ body {
 }
 h1 { 
   margin: 8px 0 4px 0;
-  font-size: 32px;
+  font-size: 36px;
 }
 .motto {
-  font-size: 14px;
+  font-size: 16px;
   color: #94a3b8;
-  margin: 0 0 8px 0;
+  margin: 0 0 12px 0;
 }
 h2 {
-  font-size: 20px;
+  font-size: 22px;
   margin: 16px 0;
 }
 .add {
@@ -95,6 +95,19 @@ h2 {
   cursor: pointer;
   font-size: 14px;
 }
+.progress-container {
+  background: #1e293b;
+  border-radius: 4px;
+  height: 8px;
+  margin-top: 8px;
+}
+.progress {
+  height: 8px;
+  background: #22c55e;
+  border-radius: 4px;
+  width: 0%;
+  transition: width 0.3s;
+}
 .calendar-container { margin-top: 8px; }
 .calendar { display: flex; flex-wrap: wrap; overflow: hidden; max-height: 0; transition: max-height 0.3s ease; }
 .calendar.show { max-height: 400px; overflow: visible; }
@@ -116,6 +129,7 @@ h2 {
   font-size: 12px;
   border-radius: 4px;
   background: #111827;
+  cursor: pointer;
 }
 .day.done { background: #22c55e; color: black; }
 .day.freeze { background: #facc15; color: black; }
@@ -145,8 +159,13 @@ const yesterday = () => {
 };
 
 let habits = JSON.parse(localStorage.getItem("keepy-habits")) || [];
+let archive = JSON.parse(localStorage.getItem("keepy-archive")) || [];
 
-function save(){ localStorage.setItem("keepy-habits", JSON.stringify(habits)); }
+function save(){ 
+  localStorage.setItem("keepy-habits", JSON.stringify(habits));
+  localStorage.setItem("keepy-archive", JSON.stringify(archive));
+}
+
 function daysBetween(a,b){ return Math.floor((new Date(a)-new Date(b))/86400000); }
 function wasYesterdayValid(h){ return (h.datesDone && h.datesDone.includes(yesterday())) || (h.freezeDates && h.freezeDates.includes(yesterday())); }
 
@@ -203,6 +222,19 @@ function renderCalendar(h, monthOffset=0){
     else if(isFreeze) dayDiv.classList.add("freeze");
     else if(isMissed) dayDiv.classList.add("missed");
 
+    dayDiv.onclick = () => {
+      if(isDone) {
+        h.datesDone = h.datesDone.filter(d => d!==dayStr);
+        h.streak--;
+      } else {
+        if(!h.datesDone) h.datesDone=[];
+        h.datesDone.push(dayStr);
+        h.streak = Math.max(h.streak,1);
+      }
+      h.lastDate=today();
+      save(); render();
+    }
+
     calDiv.appendChild(dayDiv);
   }
 
@@ -218,6 +250,15 @@ function renderCalendar(h, monthOffset=0){
 function renderCalendarAndReplace(habit, oldContainer, offset){
   const newCal = renderCalendar(habit, oldContainer.monthOffset+offset);
   oldContainer.replaceWith(newCal);
+}
+
+function notifyIfNotDone(h){
+  if(Notification.permission==="granted"){
+    const doneToday = h.datesDone && h.datesDone.includes(today());
+    if(!doneToday && !h.freeze){
+      new Notification(`Nie zapomnij o "${h.name}" dzisiaj!`);
+    }
+  }
 }
 
 function render(){
@@ -256,6 +297,9 @@ function render(){
           <button class="delete">✕</button>
         </div>
       </div>
+      <div class="progress-container">
+        <div class="progress" style="width:${Math.min((h.streak/30)*100,100)}%"></div>
+      </div>
     `;
 
     const toggleBtn = document.createElement("button");
@@ -290,6 +334,7 @@ function render(){
       if(!confirm(`Czy na pewno chcesz usunąć passę "${h.name}"?`)) return;
       div.classList.add("fade-out");
       setTimeout(()=>{
+        archive.push(h);
         habits.splice(i,1);
         save();
         render();
@@ -307,6 +352,9 @@ function render(){
     };
 
     list.appendChild(div);
+
+    // wysyłanie powiadomienia
+    notifyIfNotDone(h);
   });
 }
 
@@ -318,9 +366,13 @@ addBtn.onclick=()=>{
   render();
 };
 
+// prosba o zgodę na powiadomienia
+if(Notification.permission !== "granted"){
+  Notification.requestPermission();
+}
+
 render();
 </script>
 
 </body>
 </html>
-
