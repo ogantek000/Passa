@@ -8,6 +8,12 @@
 <title>Keepy – Keep Going</title>
 <link rel="icon" href="icon.png">
 
+
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3b82f6">
+<link rel="apple-touch-icon" href="icon.png">
+
 <style>
 :root {
   --bg-primary: #0f172a;
@@ -473,7 +479,7 @@ h1{margin:6px 0 2px;color:var(--accent)}
 
 <div class="header">
   <button class="theme-toggle" id="themeBtn">🌙</button>
-  <img src="bro.jpg" class="mascot">
+  <img src="bro" class="mascot">
   <h1>Keepy</h1>
   <p class="motto">Keep Going</p>
   <div id="countdown">--:--:--</div>
@@ -621,6 +627,7 @@ const defaultQuotes=[
     en: "Every day is a new chance to be a better version of yourself.",
     es: "Cada día es una nueva oportunidad para ser mejor."
   },
+  
   {
     pl: "Nawyki budują przyszłość, którą sobie wymarzyłeś.",
     en: "Habits build the future you dreamed of.",
@@ -655,7 +662,143 @@ const defaultQuotes=[
     pl: "Dzisiaj jest dobry dzień, żeby być produktywnym!",
     en: "Today is a good day to be productive!",
     es: "¡Hoy es un buen día para ser productivo!"
+  },
+  {
+    pl: "Pewność siebie pochodzi z przygotowania.",
+    en: "Confidence comes from preparation.",
+    es: "La confianza nace de la preparación."
+  },
+  {
+    pl: "Cele to marzenia z terminem realizacji.",
+    en: "Goals are dreams with deadlines.",
+    es: "Las metas son sueños con fecha límite."
+  },
+  {
+    pl: "Niewiele da się zrobić w duchu strachu.",
+    en: "Little can be done under the spirit of fear.",
+    es: "Poco se puede lograr bajo el espíritu del miedo."
+  },
+  {
+    pl: "Jeśli chcesz mieć satysfakcjonujące życie, musisz wstawać z determinacją.",
+    en: "If you want to have a satisfactory life, you’ve got to get up with determination.",
+    es: "Si quieres tener una vida satisfactoria, debes levantarte con determinación."
+  },
+  {
+    pl: "CANEI: ciągłe i niekończące się doskonalenie.",
+    en: "CANEI: continuous and never-ending improvement.",
+    es: "CANEI: mejora continua e interminable."
+  },
+  {
+    pl: "Szaleństwem jest robić wciąż to samo i oczekiwać innych rezultatów.",
+    en: "It is insane to do the same thing over and over again and expect different results.",
+    es: "Es una locura hacer lo mismo una y otra vez y esperar resultados diferentes."
+  },
+  {
+    pl: "Najlepsi liderzy potrafią sprawić, że zwykli ludzie robią niezwykłe rzeczy.",
+    en: "The best leaders are capable of making common people do uncommon things.",
+    es: "Los mejores líderes son capaces de hacer que la gente común haga cosas extraordinarias."
+  },
+  {
+    pl: "Karm swój umysł białkiem mentalnym, a nie mentalnymi słodyczami.",
+    en: "Feed your mind with mental protein rather than mental candy.",
+    es: "Alimenta tu mente con proteína mental en lugar de dulces mentales."
+  },
+  {
+    pl: "Jeśli jesteś w lesie i nie wiesz, dokąd iść – zacznij iść.",
+    en: "If you are in the woods and you don’t know where to go, start walking.",
+    es: "Si estás en el bosque y no sabes a dónde ir, empieza a caminar."
+  },
+  {
+    pl: "Czytelnicy są zwycięzcami.",
+    en: "Readers are winners.",
+    es: "Los lectores son ganadores."
+  },
+  {
+    pl: "Spodziewaj się niespodziewanego.",
+    en: "Expect the unexpected.",
+    es: "Espera lo inesperado."
+  },
+  {
+    pl: "Jeśli chcesz zmienić swoją przyszłość, działaj – i działaj teraz.",
+    en: "If you want to change your future, take action and take it now.",
+    es: "Si quieres cambiar tu futuro, actúa y hazlo ahora."
+  },
+  {
+    pl: "Gdy patrzysz na słońce, wszystkie cienie zostają za tobą.",
+    en: "When you look at the sun, you leave all the shadows behind you.",
+    es: "Cuando miras al sol, dejas todas las sombras detrás de ti."
+  },
+  {
+    pl: "Baw się dobrze, pracując.",
+    en: "Have fun working.",
+    es: "Diviértete trabajando."
+  },
+  {
+    pl: "Traktuj siebie jak projekt bez końca.",
+    en: "Treat yourself as a never-ending project.",
+    es: "Trátate como un proyecto sin fin."
+  },
+  {
+    pl: "Jeśli będziesz to robić dalej, stanie się to nawykiem.",
+    en: "If you keep doing this, it becomes a habit.",
+    es: "Si sigues haciéndolo, se convierte en un hábito."
+  },
+  {
+    pl: "Spodziewaj się tego, co spodziewane.",
+    en: "Expect the expectable.",
+    es: "Espera lo esperable."
+  },
+  {
+    pl: "Bądź mistrzem, zanim nim zostaniesz.",
+    en: "Be the champion before you become the champion.",
+    es: "Sé el campeón antes de convertirte en campeón."
+  },
+  {
+    pl: "Ignoruj szum.",
+    en: "Ignore the noise.",
+    es: "Ignora el ruido."
+  },
+  {
+    pl: "Trzeba włożyć więcej wysiłku, by coś wyglądało na bezwysiłkowe.",
+    en: "You have to put in more effort to make something appear effortless.",
+    es: "Hay que esforzarse más para que algo parezca sin esfuerzo."
+  },
+  {
+    pl: "Nigdy nie zbaczaj z drogi.",
+    en: "Never stray from the way.",
+    es: "Nunca te desvíes del camino."
+  },
+  {
+    pl: "Siła woli jest jak mięsień – jeśli przeciążysz ją, męczy się.",
+    en: "Willpower is like a muscle; if you work it too hard, it gets tired.",
+    es: "La fuerza de voluntad es como un músculo: si lo trabajas demasiado, se cansa."
+  },
+  {
+    pl: "Niepoddawanie się to najlepsza umiejętność.",
+    en: "Not quitting is the best skill.",
+    es: "No rendirse es la mejor habilidad."
+  },
+  {
+    pl: "Wizualizuj most.",
+    en: "Visualise the bridge.",
+    es: "Visualiza el puente."
+  },
+  {
+    pl: "Gdy przestajesz się zmieniać, jesteś skończony.",
+    en: "When you stop changing, you are finished.",
+    es: "Cuando dejas de cambiar, estás acabado."
+  },
+  {
+    pl: "Im więcej się uczę, tym bardziej zdaję sobie sprawę, jak mało wiem.",
+    en: "The more I learn, the more I realize how much I don’t know.",
+    es: "Cuanto más aprendo, más me doy cuenta de lo poco que sé."
+  },
+  {
+    pl: "To, czego boimy się najbardziej, często jest dokładnie tym, czego najbardziej unikamy.",
+    en: "The thing we fear the most is often the thing we avoid the most.",
+    es: "Aquello que más tememos suele ser aquello que más evitamos."
   }
+
 ];
 
 let currentQuoteIndex=0;
@@ -1323,3 +1466,4 @@ render();
 </script>
 </body>
 </html>
+
