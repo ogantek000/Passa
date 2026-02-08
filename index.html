@@ -7,121 +7,96 @@
 <link rel="icon" href="icon.png">
 
 <style>
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-  background:#0f172a;
-  color:white;
-  margin:0;
-  padding:16px;
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
+  background:#0f172a;color:white;margin:0;padding:16px;
 }
+.header{text-align:center;margin-bottom:12px}
+.mascot{width:220px;height:220px;border-radius:50%;object-fit:cover}
+h1{margin:8px 0 4px;color:#3b82f6}
+.motto{color:#94a3b8;font-size:14px}
 
-.header { text-align:center; margin-bottom:16px; }
-.mascot { width:220px; height:220px; border-radius:50%; object-fit:cover; }
-h1 { margin:8px 0 4px; font-size:28px; color:#3b82f6; }
-.motto { font-size:14px; color:#94a3b8; margin-bottom:8px; }
-
-.add {
-  position:fixed; bottom:24px; right:24px;
-  width:56px; height:56px; border-radius:50%;
-  background:#22c55e; color:black;
-  font-size:32px; border:none; font-weight:bold;
-}
-
-.habit {
+#stats{
+  display:flex;justify-content:space-around;
   background:rgba(255,255,255,0.05);
-  padding:16px; border-radius:14px;
-  margin-bottom:12px;
-  opacity:0; transform:translateY(20px);
-  transition:0.25s;
-  position:relative;
+  padding:12px;border-radius:14px;margin-bottom:14px;
 }
+#stats div{text-align:center}
+#stats div div:first-child{font-size:13px;color:#94a3b8}
+#stats div div:last-child{font-size:18px;font-weight:bold}
 
-.habit.show { opacity:1; transform:none; }
+.habit{
+  background:rgba(255,255,255,0.05);
+  padding:16px;border-radius:14px;margin-bottom:12px;
+  opacity:0;transform:translateY(20px);
+  transition:.25s;position:relative
+}
+.habit.show{opacity:1;transform:none}
 
 .habit.ice::after{
-  content:""; position:absolute; inset:0;
-  background:#3b82f6; opacity:0;
-  border-radius:14px;
-  animation:ice 0.8s;
+  content:"";position:absolute;inset:0;
+  background:#3b82f6;opacity:0;border-radius:14px;
+  animation:ice .8s
 }
-@keyframes ice{
-  30%,60%{opacity:.6;} 100%{opacity:0;}
-}
+@keyframes ice{30%,60%{opacity:.6}100%{opacity:0}}
 
-.habit-header{
-  display:flex; justify-content:space-between;
-  align-items:center;
-}
-
-.name { font-size:18px; }
-.streak { font-size:20px; color:#ff9500; }
+.habit-header{display:flex;justify-content:space-between}
+.name{font-size:18px}
+.streak{font-size:20px;color:#ff9500}
 
 .actions button{
-  margin-left:6px;
-  padding:6px 10px;
-  border:none; border-radius:8px;
+  margin-left:6px;padding:6px 10px;
+  border:none;border-radius:8px
 }
+.done{background:#22c55e}
+.freeze{background:#facc15}
+.delete{background:#ef4444;color:white}
 
-.done{background:#22c55e;}
-.freeze{background:#facc15;}
-.delete{background:#ef4444;color:white;}
-
-.toggle-cal, .edit-cal{
-  margin-top:8px;
-  width:100%;
-  padding:8px;
-  border:none;
-  border-radius:8px;
-  background:#3b82f6;
-  color:white;
+.toggle-cal,.edit-cal{
+  width:100%;margin-top:8px;
+  padding:8px;border:none;border-radius:8px;
+  background:#3b82f6;color:white
 }
+.edit-cal.active{background:#f97316}
 
-.edit-cal.active{ background:#f97316; }
+.calendar-container{margin-top:8px}
+.calendar-header{
+  display:flex;justify-content:space-between;
+  align-items:center;margin-bottom:4px;
+  visibility:hidden
+}
+.calendar-header button{
+  background:#1e293b;color:white;border:none;
+  border-radius:4px;padding:4px 10px
+}
+.calendar.show .calendar-header{visibility:visible}
 
 .calendar{
-  display:flex; flex-wrap:wrap;
-  max-height:0; overflow:hidden;
-  opacity:0;
-  transition:0.3s;
-  pointer-events:none;
+  display:flex;flex-wrap:wrap;
+  max-height:0;opacity:0;overflow:hidden;
+  transition:.35s;pointer-events:none
 }
-
-.calendar.show{
-  max-height:400px;
-  opacity:1;
-}
-
-.calendar.editing{
-  pointer-events:auto;
-  outline:2px dashed #f97316;
-}
-
-.calendar-header{
-  width:100%;
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:6px;
-}
+.calendar.show{max-height:400px;opacity:1}
+.calendar.editing{pointer-events:auto;outline:2px dashed #f97316}
 
 .day{
-  width:14.2%;
-  height:28px;
-  margin-bottom:2px;
-  text-align:center;
-  line-height:28px;
-  font-size:12px;
-  border-radius:6px;
-  background:#111827;
+  width:14.2%;height:28px;
+  line-height:28px;text-align:center;
+  font-size:12px;border-radius:6px;
+  background:#111827
 }
+.calendar.editing .day{cursor:pointer}
 
-.calendar.editing .day{
-  cursor:pointer;
+.day.done{background:#22c55e;color:black}
+.day.freeze{background:#facc15;color:black}
+.day.missed{background:#ef4444}
+.day.locked{opacity:.35}
+
+.add{
+  position:fixed;bottom:24px;right:24px;
+  width:56px;height:56px;border-radius:50%;
+  background:#22c55e;font-size:32px;border:none
 }
-
-.day.done{ background:#22c55e; color:black;}
-.day.freeze{ background:#facc15; color:black;}
-.day.missed{ background:#ef4444; }
-
 </style>
 </head>
 <body>
@@ -132,67 +107,105 @@ h1 { margin:8px 0 4px; font-size:28px; color:#3b82f6; }
   <p class="motto">Keep Going</p>
 </div>
 
+<div id="stats">
+  <div><div>Dni wykonane</div><div id="totalDone">0</div></div>
+  <div><div>Najdłuższa passa</div><div id="maxStreak">0</div></div>
+  <div><div>Średnia dzienna</div><div id="avgDaily">0</div></div>
+</div>
+
 <div id="list"></div>
 <button class="add" id="addBtn">+</button>
 
 <script>
 const list=document.getElementById("list");
-const addBtn=document.getElementById("addBtn");
 const today=()=>new Date().toISOString().slice(0,10);
+const DAY=86400000;
 
 let habits=JSON.parse(localStorage.getItem("keepy"))||[];
 
 const save=()=>localStorage.setItem("keepy",JSON.stringify(habits));
 
+function updateStats(){
+  let total=0,max=0,dates={};
+  habits.forEach(h=>{
+    h.datesDone.forEach(d=>{
+      total++;dates[d]=(dates[d]||0)+1;
+    });
+    if(h.streak>max)max=h.streak;
+  });
+  const days=Object.keys(dates).length||1;
+  totalDone.textContent=total;
+  maxStreak.textContent=max;
+  avgDaily.textContent=(total/days).toFixed(2);
+}
+
 function renderCalendar(h){
-  const wrap=document.createElement("div");
-  const cal=document.createElement("div");
-  cal.className="calendar";
+  h.monthOffset??=0;
+  const cont=document.createElement("div");
+  cont.className="calendar-container";
 
   const header=document.createElement("div");
   header.className="calendar-header";
 
+  const l=document.createElement("button");
+  const r=document.createElement("button");
+  l.textContent="<"; r.textContent=">";
+
+  const ref=new Date();
+  ref.setMonth(ref.getMonth()+h.monthOffset);
+
   const title=document.createElement("span");
-  title.textContent=new Date().toLocaleString("pl-PL",{month:"long",year:"numeric"});
-  header.appendChild(title);
-  wrap.appendChild(header);
+  title.textContent=ref.toLocaleString("pl-PL",{month:"long",year:"numeric"});
 
-  const first=(new Date().getDay()+6)%7;
-  const days=new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate();
+  header.append(l,title,r);
+  cont.append(header);
 
-  for(let i=0;i<first;i++){
-    cal.appendChild(document.createElement("div"));
-  }
+  const cal=document.createElement("div");
+  cal.className="calendar";
+
+  const first=(new Date(ref.getFullYear(),ref.getMonth(),1).getDay()+6)%7;
+  const days=new Date(ref.getFullYear(),ref.getMonth()+1,0).getDate();
+
+  for(let i=0;i<first;i++)cal.append(document.createElement("div"));
 
   for(let d=1;d<=days;d++){
-    const dayStr=`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const date=new Date(ref.getFullYear(),ref.getMonth(),d);
+    const ds=date.toISOString().slice(0,10);
     const div=document.createElement("div");
-    div.className="day";
-    div.textContent=d;
+    div.className="day";div.textContent=d;
 
-    if(h.datesDone.includes(dayStr)) div.classList.add("done");
-    else if(h.freezeDates.includes(dayStr)) div.classList.add("freeze");
+    const diff=(new Date(today())-date)/DAY;
+    const editable=diff>=0 && diff<=7;
+
+    if(h.datesDone.includes(ds))div.classList.add("done");
+    else if(h.freezeDates.includes(ds))div.classList.add("freeze");
+    else if(diff>0)div.classList.add("missed");
+
+    if(!editable)div.classList.add("locked");
 
     div.onclick=()=>{
-      if(!cal.classList.contains("editing")) return;
-      if(h.freeze && dayStr===today()) return;
+      if(!cal.classList.contains("editing"))return;
+      if(!editable)return;
 
-      if(h.datesDone.includes(dayStr)){
-        h.datesDone=h.datesDone.filter(x=>x!==dayStr);
-        h.freezeDates.push(dayStr);
-      }else if(h.freezeDates.includes(dayStr)){
-        h.freezeDates=h.freezeDates.filter(x=>x!==dayStr);
+      if(h.datesDone.includes(ds)){
+        h.datesDone=h.datesDone.filter(x=>x!==ds);
+        h.freezeDates.push(ds);
+      }else if(h.freezeDates.includes(ds)){
+        h.freezeDates=h.freezeDates.filter(x=>x!==ds);
       }else{
-        h.datesDone.push(dayStr);
+        h.datesDone.push(ds);
       }
-      save(); render();
+      save();render();
     };
 
-    cal.appendChild(div);
+    cal.append(div);
   }
 
-  wrap.appendChild(cal);
-  return {wrap,cal};
+  l.onclick=()=>{h.monthOffset--;save();render()};
+  r.onclick=()=>{h.monthOffset++;save();render()};
+
+  cont.append(cal);
+  return {cont,cal};
 }
 
 function render(){
@@ -203,13 +216,10 @@ function render(){
 
     div.innerHTML=`
       <div class="habit-header">
-        <div>
-          <div class="name">${h.name}</div>
-          <div class="streak">🔥 ${h.streak}</div>
-        </div>
+        <div><div class="name">${h.name}</div><div class="streak">🔥 ${h.streak}</div></div>
         <div class="actions">
           <button class="done">Zrobione dziś</button>
-          <button class="freeze">Freeze</button>
+          <button class="freeze">${h.freeze?"Odmróź":"Freeze"}</button>
           <button class="delete">✕</button>
         </div>
       </div>
@@ -223,7 +233,7 @@ function render(){
     edit.className="edit-cal";
     edit.textContent="✏️ Edytuj historię";
 
-    const {wrap,cal}=renderCalendar(h);
+    const {cont,cal}=renderCalendar(h);
 
     toggle.onclick=()=>{
       cal.classList.toggle("show");
@@ -233,51 +243,51 @@ function render(){
     edit.onclick=()=>{
       cal.classList.toggle("editing");
       edit.classList.toggle("active");
-      edit.textContent=cal.classList.contains("editing")
-        ?"✔️ Zakończ edycję"
-        :"✏️ Edytuj historię";
+      edit.textContent=cal.classList.contains("editing")?"✔️ Zakończ edycję":"✏️ Edytuj historię";
     };
 
     div.querySelector(".done").onclick=()=>{
-      if(h.freeze) return;
+      if(h.freeze)return;
       if(!h.datesDone.includes(today())){
         h.datesDone.push(today());
         h.streak++;
-        save(); render();
+        save();render();
       }
     };
 
     div.querySelector(".freeze").onclick=()=>{
       h.freeze=!h.freeze;
-      h.freezeDates.push(today());
+      if(h.freeze && !h.freezeDates.includes(today()))
+        h.freezeDates.push(today());
+      if(!h.freeze)
+        h.freezeDates=h.freezeDates.filter(d=>d!==today());
       div.classList.add("ice");
       setTimeout(()=>div.classList.remove("ice"),800);
-      save(); render();
+      save();render();
     };
 
     div.querySelector(".delete").onclick=()=>{
       if(confirm("Usunąć passę?")){
-        habits.splice(i,1); save(); render();
+        habits.splice(i,1);save();render();
       }
     };
 
-    div.append(toggle,edit,wrap);
-    list.appendChild(div);
+    div.append(toggle,edit,cont);
+    list.append(div);
     setTimeout(()=>div.classList.add("show"),10);
   });
+  updateStats();
 }
 
-addBtn.onclick=()=>{
+document.getElementById("addBtn").onclick=()=>{
   const n=prompt("Nazwa passy:");
   if(n){
     habits.push({
-      name:n,
-      streak:0,
-      datesDone:[],
-      freezeDates:[],
-      freeze:false
+      name:n,streak:0,
+      datesDone:[],freezeDates:[],
+      freeze:false,monthOffset:0
     });
-    save(); render();
+    save();render();
   }
 };
 
