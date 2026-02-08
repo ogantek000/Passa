@@ -15,10 +15,7 @@ body{
 .mascot{width:200px;height:200px;border-radius:50%;object-fit:cover}
 h1{margin:6px 0 2px;color:#3b82f6}
 .motto{color:#94a3b8;font-size:14px}
-
-#countdown{
-  font-size:16px;font-weight:600;color:#94a3b8;margin:6px 0 14px;
-}
+#countdown{font-size:16px;font-weight:600;color:#94a3b8;margin:6px 0 14px}
 
 #stats{
   display:flex;justify-content:space-around;
@@ -78,29 +75,27 @@ h1{margin:6px 0 2px;color:#3b82f6}
 }
 
 .calendar-container{margin-top:8px}
+.calendar{
+  display:flex;flex-wrap:wrap;
+  max-height:0;opacity:0;overflow:hidden;
+  transition:.35s;pointer-events:none;position:relative
+}
+.calendar.show{max-height:400px;opacity:1;pointer-events:auto}
+
 .calendar-header{
-  display:flex;justify-content:space-between;
-  align-items:center;margin-bottom:4px;
-  visibility:hidden; /* domyślnie ukryty */
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:4px;
 }
 .calendar-header button,
 .calendar-header span{
   visibility:hidden;
 }
-.calendar.show .calendar-header,
 .calendar.show .calendar-header button,
 .calendar.show .calendar-header span{
-  visibility:visible; /* widoczne tylko po rozwinięciu */
+  visibility:visible;
 }
 
-.calendar{
-  display:flex;flex-wrap:wrap;
-  max-height:0;opacity:0;overflow:hidden;
-  transition:.35s;pointer-events:none
-}
-.calendar.show{max-height:400px;opacity:1}
 .calendar.editing{
-  pointer-events:auto;
   outline:2px dashed #f97316
 }
 
@@ -127,7 +122,7 @@ h1{margin:6px 0 2px;color:#3b82f6}
 <body>
 
 <div class="header">
-  <img src="bro" class="mascot">
+  <img src="bro.jpg" class="mascot">
   <h1>Keepy</h1>
   <p class="motto">Keep Going</p>
   <div id="countdown">--:--:--</div>
@@ -152,7 +147,7 @@ function today(){
   return d.toISOString().slice(0,10);
 }
 
-/* ⏱️ ZEGAR  */
+/* ⏱️ ZEGAR DO PÓŁNOCY */
 function startCountdown(){
   const el=document.getElementById("countdown");
   setInterval(()=>{
@@ -208,16 +203,16 @@ function renderCalendar(h){
   title.textContent=ref.toLocaleString("pl-PL",{month:"long",year:"numeric"});
 
   header.append(l,title,r);
+  cal.append(header);
 
   const first=(new Date(ref.getFullYear(),ref.getMonth(),1).getDay()+6)%7;
   const daysInMonth=new Date(ref.getFullYear(),ref.getMonth()+1,0).getDate();
 
-  for(let i=0;i<first;i++)cal.append(document.createElement("div"));
+  for(let i=0;i<first;i++) cal.append(document.createElement("div"));
 
   for(let d=1;d<=daysInMonth;d++){
     const date=new Date(ref.getFullYear(),ref.getMonth(),d);
     const ds=new Date(date.getTime()-date.getTimezoneOffset()*60000).toISOString().slice(0,10);
-
     const diff=(new Date(today())-new Date(ds))/DAY;
     const editable=diff>=0 && diff<=7;
 
@@ -232,7 +227,7 @@ function renderCalendar(h){
     if(!editable) div.classList.add("locked");
 
     div.onclick=()=>{
-      if(!h.editing || !editable)return;
+      if(!h.editing || !editable) return;
       if(h.datesDone.includes(ds))
         h.datesDone=h.datesDone.filter(x=>x!==ds);
       else
@@ -243,10 +238,16 @@ function renderCalendar(h){
     cal.append(div);
   }
 
-  l.onclick=()=>{h.monthOffset--;save();render()};
-  r.onclick=()=>{h.monthOffset++;save();render()};
+  l.onclick=(e)=>{
+    e.stopPropagation();
+    h.monthOffset--; save(); render();
+  };
+  r.onclick=(e)=>{
+    e.stopPropagation();
+    h.monthOffset++; save(); render();
+  };
 
-  cont.append(cal,header);
+  cont.append(cal);
   return {cont,cal};
 }
 
@@ -296,16 +297,16 @@ function render(){
 
     div.querySelector(".deleteHist").onclick=()=>{
       if(confirm("Usunąć passę?")){
-        habits.splice(i,1);save();render();
+        habits.splice(i,1); save(); render();
       }
     };
 
     div.querySelector(".done").onclick=()=>{
-      if(h.freeze)return;
+      if(h.freeze) return;
       if(!h.datesDone.includes(today())){
         h.datesDone.push(today());
         h.streak++;
-        save();render();
+        save(); render();
       }
     };
 
@@ -313,7 +314,7 @@ function render(){
       h.freeze=!h.freeze;
       div.classList.add("ice");
       setTimeout(()=>div.classList.remove("ice"),800);
-      save();render();
+      save(); render();
     };
 
     div.append(toggle,cont);
@@ -344,5 +345,3 @@ render();
 </script>
 </body>
 </html>
-
-
