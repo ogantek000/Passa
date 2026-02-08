@@ -2,7 +2,9 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Keepy – Keep Going</title>
 <link rel="icon" href="icon.png">
 
@@ -17,6 +19,14 @@
   --success: #22c55e;
   --warning: #facc15;
   --danger: #ef4444;
+}
+
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+html {
+  scroll-behavior: auto;
 }
 
 [data-theme="light"] {
@@ -41,15 +51,26 @@ body{
   background:var(--bg-primary);
   color:var(--text-primary);
   margin:0;padding:16px;
+  padding-bottom:max(24px,env(safe-area-inset-bottom));
   transition:background .3s, color .3s;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  -webkit-tap-highlight-color:transparent;
+  overscroll-behavior:none;
 }
 
 .header{text-align:center;margin-bottom:10px;position:relative}
 .theme-toggle{
   position:absolute;top:0;right:0;
   background:var(--bg-tertiary);border:none;
-  padding:8px 12px;border-radius:8px;cursor:pointer;
-  color:var(--text-primary);font-size:18px;
+  padding:12px 16px;border-radius:10px;cursor:pointer;
+  color:var(--text-primary);font-size:20px;
+  min-width:44px;min-height:44px;
+  transition:transform .2s, opacity .2s;
+}
+.theme-toggle:active{
+  transform:scale(0.95);
+  opacity:0.8;
 }
 .mascot{width:200px;height:200px;border-radius:50%;object-fit:cover}
 h1{margin:6px 0 2px;color:var(--accent)}
@@ -72,27 +93,40 @@ h1{margin:6px 0 2px;color:var(--accent)}
 .charts h3{margin:0 0 12px;font-size:16px;color:var(--text-secondary)}
 .heat-map{
   display:grid;grid-template-columns:repeat(7,1fr);
-  gap:4px;margin-bottom:16px;
+  gap:3px;margin-bottom:16px;
 }
 .heat-day{
-  aspect-ratio:1;border-radius:4px;
+  aspect-ratio:1;border-radius:3px;
   background:var(--bg-tertiary);
+  font-size:9px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text-secondary);
+  position:relative;
 }
-.heat-day.level-1{background:#16a34a;opacity:0.3}
-.heat-day.level-2{background:#16a34a;opacity:0.6}
-.heat-day.level-3{background:#16a34a;opacity:0.9}
-.heat-day.level-4{background:#16a34a}
+.heat-day:hover{
+  transform:scale(1.1);
+  z-index:1;
+  cursor:pointer;
+}
+.heat-day.level-1{background:#16a34a;opacity:0.3;color:white}
+.heat-day.level-2{background:#16a34a;opacity:0.6;color:white}
+.heat-day.level-3{background:#16a34a;opacity:0.9;color:white}
+.heat-day.level-4{background:#16a34a;color:white}
 
 .habit{
   background:var(--bg-secondary);
   padding:16px;border-radius:14px;margin-bottom:12px;
   opacity:0;transform:translateY(20px);
-  transition:.25s;position:relative;
-  cursor:move;
+  transition:all .4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position:relative;
   border-left:4px solid transparent;
+  scroll-margin-top:20px;
 }
 .habit.show{opacity:1;transform:none}
-.habit.dragging{opacity:0.5}
+.habit.dragging{opacity:0.5;transform:scale(0.98)}
+.habit:active{
+  transform:scale(0.98);
+}
 
 .habit.ice::after{
   content:"";position:absolute;inset:0;
@@ -120,41 +154,66 @@ h1{margin:6px 0 2px;color:var(--accent)}
 .name{font-size:18px}
 .streak{font-size:20px;color:#ff9500}
 
-.actions{display:flex;gap:6px;flex-wrap:wrap}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
 .actions button{
-  padding:6px 10px;border:none;border-radius:8px;cursor:pointer;
-  font-size:13px;
+  padding:10px 14px;border:none;border-radius:10px;cursor:pointer;
+  font-size:14px;
+  min-height:44px;
+  font-weight:500;
+  transition:transform .2s, opacity .2s;
+}
+.actions button:active{
+  transform:scale(0.95);
+  opacity:0.8;
 }
 .done{background:var(--success);color:white}
 .freeze{background:var(--warning);color:black}
-.more{background:var(--bg-tertiary);color:var(--text-primary);font-size:18px}
+.more{background:var(--bg-tertiary);color:var(--text-primary);font-size:20px;min-width:44px}
 
 .menu{
   position:absolute;right:12px;top:52px;
   background:var(--bg-primary);border-radius:10px;
   overflow:hidden;display:none;
-  box-shadow:0 10px 30px rgba(0,0,0,.5);z-index:2;
+  box-shadow:0 10px 30px rgba(0,0,0,.5);z-index:100;
   border:1px solid var(--bg-tertiary);
 }
 .menu button{
-  width:100%;padding:10px 14px;
+  width:100%;padding:14px 16px;
   background:none;border:none;color:var(--text-primary);
   text-align:left;cursor:pointer;
+  font-size:15px;
+  min-height:48px;
+  transition:background .2s;
 }
 .menu button:hover{background:var(--bg-secondary)}
+.menu button:active{background:var(--bg-tertiary)}
 
 .toggle-cal{
   width:100%;margin-top:8px;
-  padding:8px;border:none;border-radius:8px;
-  background:var(--accent);color:white;cursor:pointer
+  padding:12px;border:none;border-radius:10px;
+  background:var(--accent);color:white;cursor:pointer;
+  font-weight:500;font-size:15px;
+  min-height:44px;
+  transition:transform .2s, opacity .2s;
+}
+.toggle-cal:active{
+  transform:scale(0.98);
+  opacity:0.9;
 }
 
-.calendar-container{margin-top:8px;position:relative}
+.calendar-container{margin-top:8px;position:relative;overflow:hidden}
 .calendar{
-  max-height:0;opacity:0;overflow:hidden;
-  transition:.35s;pointer-events:none;
+  overflow:hidden;
+  transition:all .3s ease;
+  pointer-events:none;
+  opacity:0;
+  max-height:0;
 }
-.calendar.show{max-height:400px;opacity:1;pointer-events:auto}
+.calendar.show{
+  opacity:1;
+  pointer-events:auto;
+  max-height:500px;
+}
 
 .calendar.editing{
   outline:2px dashed #f97316
@@ -179,12 +238,16 @@ h1{margin:6px 0 2px;color:var(--accent)}
 }
 
 .day{
-  width:14.2%;height:28px;
-  line-height:28px;text-align:center;
+  width:14.2%;height:32px;
+  line-height:32px;text-align:center;
   font-size:12px;border-radius:6px;
-  background:var(--bg-tertiary)
+  background:var(--bg-tertiary);
+  transition:transform .2s;
 }
 .calendar.editing .day{cursor:pointer}
+.calendar.editing .day:active{
+  transform:scale(0.9);
+}
 
 .day.done{background:var(--success);color:white}
 .day.freeze{background:var(--warning);color:black}
@@ -192,23 +255,39 @@ h1{margin:6px 0 2px;color:var(--accent)}
 .day.locked{opacity:.35}
 
 .add{
-  position:fixed;bottom:24px;right:24px;
-  width:56px;height:56px;border-radius:50%;
+  position:fixed;bottom:max(24px,env(safe-area-inset-bottom));right:24px;
+  width:60px;height:60px;border-radius:50%;
   background:var(--success);color:white;font-size:32px;border:none;cursor:pointer;
-  box-shadow:0 4px 12px rgba(0,0,0,0.3);
+  box-shadow:0 4px 20px rgba(34,197,94,0.4);
+  transition:transform .3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow .3s;
+  z-index:10;
+}
+.add:active{
+  transform:scale(0.9);
+  box-shadow:0 2px 10px rgba(34,197,94,0.3);
 }
 
 .modal{
   display:none;position:fixed;inset:0;
   background:rgba(0,0,0,0.7);z-index:100;
   align-items:center;justify-content:center;
+  animation:fadeIn .3s ease;
 }
 .modal.show{display:flex}
+@keyframes fadeIn{
+  from{opacity:0}
+  to{opacity:1}
+}
 .modal-content{
   background:var(--bg-primary);
   padding:24px;border-radius:16px;
   max-width:400px;width:90%;
   border:1px solid var(--bg-tertiary);
+  animation:slideUp .4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes slideUp{
+  from{transform:translateY(50px);opacity:0}
+  to{transform:translateY(0);opacity:1}
 }
 .modal h3{margin:0 0 16px;color:var(--accent)}
 .modal input, .modal select{
@@ -222,10 +301,100 @@ h1{margin:6px 0 2px;color:var(--accent)}
   display:flex;gap:8px;justify-content:flex-end;
 }
 .modal-buttons button{
-  padding:8px 16px;border:none;border-radius:8px;cursor:pointer;
+  padding:12px 20px;border:none;border-radius:10px;cursor:pointer;
+  font-size:16px;font-weight:500;
+  min-height:44px;min-width:80px;
+  transition:transform .2s, opacity .2s;
+}
+.modal-buttons button:active{
+  transform:scale(0.95);
+  opacity:0.8;
 }
 .btn-primary{background:var(--accent);color:white}
 .btn-secondary{background:var(--bg-tertiary);color:var(--text-primary)}
+
+.quote-box{
+  background:var(--bg-secondary);
+  padding:16px;border-radius:14px;margin-bottom:14px;
+  position:relative;
+  border-left:4px solid var(--accent);
+}
+.quote-text{
+  font-style:italic;color:var(--text-primary);
+  font-size:15px;line-height:1.5;
+  padding-right:40px;
+}
+.quote-refresh{
+  position:absolute;right:12px;top:12px;
+  background:var(--bg-tertiary);border:none;
+  width:36px;height:36px;border-radius:50%;
+  font-size:16px;cursor:pointer;
+  transition:transform .3s;
+}
+.quote-refresh:active{
+  transform:rotate(180deg);
+}
+
+.empty-state{
+  text-align:center;
+  padding:60px 20px;
+  background:var(--bg-secondary);
+  border-radius:14px;
+  margin:20px 0;
+}
+
+.category-stats{
+  background:var(--bg-secondary);
+  padding:16px;border-radius:14px;margin-bottom:14px;
+}
+.category-stat-item{
+  display:flex;justify-content:space-between;
+  padding:8px 0;border-bottom:1px solid var(--bg-tertiary);
+}
+.category-stat-item:last-child{border:none}
+
+.toast{
+  position:fixed;bottom:100px;left:50%;
+  transform:translateX(-50%) translateY(100px);
+  background:var(--bg-primary);
+  padding:16px 20px;border-radius:12px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.5);
+  border:1px solid var(--bg-tertiary);
+  display:flex;gap:12px;align-items:center;
+  z-index:200;
+  opacity:0;
+  transition:all .3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.toast.show{
+  transform:translateX(-50%) translateY(0);
+  opacity:1;
+}
+.toast button{
+  background:var(--accent);color:white;
+  border:none;padding:8px 16px;border-radius:8px;
+  cursor:pointer;font-weight:500;
+}
+
+.loading-skeleton{
+  background:linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
+  background-size:200% 100%;
+  animation:shimmer 1.5s infinite;
+  border-radius:14px;
+  height:120px;
+  margin-bottom:12px;
+}
+@keyframes shimmer{
+  0%{background-position:200% 0}
+  100%{background-position:-200% 0}
+}
+
+.streak-bounce{
+  animation:bounce .5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes bounce{
+  0%, 100%{transform:scale(1)}
+  50%{transform:scale(1.3)}
+}
 </style>
 </head>
 <body>
@@ -244,10 +413,37 @@ h1{margin:6px 0 2px;color:var(--accent)}
   <div><div>Średnia dzienna</div><div id="avgDaily">0</div></div>
 </div>
 
+<div class="quote-box" id="quoteBox">
+  <div class="quote-text" id="quoteText"></div>
+  <button class="quote-refresh" id="quoteRefresh">🔄</button>
+</div>
+
 <div class="charts">
-  <h3>📊 Aktywność (ostatnie 28 dni)</h3>
-  <p style="font-size:13px;color:var(--text-secondary);margin:0 0 12px">Każdy kwadrat to jeden dzień. Im ciemniejszy kolor, tym więcej pass zrobiłeś tego dnia.</p>
-  <div class="heat-map" id="heatMap"></div>
+  <h3 style="font-size:16px;color:var(--text-secondary);margin:0 0 8px;cursor:pointer" id="heatMapToggle">
+    📊 Aktywność (ostatnie 28 dni) <span style="float:right">▼</span>
+  </h3>
+  <div id="heatMapContainer">
+    <p style="font-size:13px;color:var(--text-secondary);margin:0 0 12px">Każdy kwadrat to jeden dzień. Im ciemniejszy kolor, tym więcej pass zrobiłeś tego dnia.</p>
+    <div class="heat-map" id="heatMap"></div>
+  </div>
+</div>
+
+<div class="category-stats" id="categoryStats" style="display:none">
+  <h3 style="font-size:16px;color:var(--text-secondary);margin:0 0 12px;cursor:pointer" id="categoryStatsToggle">
+    📈 Statystyki per kategoria <span style="float:right">▼</span>
+  </h3>
+  <div style="display:none;margin-bottom:8px" id="categorySortButtons">
+    <button class="btn-secondary" id="sortByName" style="padding:6px 12px;margin-right:6px;font-size:13px">Sortuj: Nazwa</button>
+    <button class="btn-secondary" id="sortByDays" style="padding:6px 12px;font-size:13px">Sortuj: Dni</button>
+    <p style="font-size:12px;color:var(--text-secondary);margin:8px 0 0">💡 Możesz też przeciągać kategorie (⋮⋮) żeby zmienić kolejność</p>
+  </div>
+  <div id="categoryStatsList" style="display:none"></div>
+</div>
+
+<div class="empty-state" id="emptyState" style="display:none">
+  <div style="font-size:60px;margin-bottom:16px">💪</div>
+  <h2 style="color:var(--accent);margin:0 0 8px">Zacznij swoją przygodę!</h2>
+  <p style="color:var(--text-secondary);margin:0">Dodaj swoją pierwszą passę i buduj nawyki każdego dnia</p>
 </div>
 
 <div id="list"></div>
@@ -294,11 +490,86 @@ h1{margin:6px 0 2px;color:var(--accent)}
   </div>
 </div>
 
+<div class="modal" id="streakEmojiModal">
+  <div class="modal-content">
+    <h3>🔥 Personalizuj emoji passy</h3>
+    <input type="text" id="streakEmoji" placeholder="np. 🔥, 🚀, ⭐, 💎" maxlength="2">
+    <p style="font-size:13px;color:var(--text-secondary);margin:8px 0">Wpisz swoje ulubione emoji (lub zostaw puste dla domyślnego 🔥)</p>
+    <div class="modal-buttons">
+      <button class="btn-secondary" id="cancelStreakEmojiBtn">Anuluj</button>
+      <button class="btn-primary" id="saveStreakEmojiBtn">Zapisz</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="manageQuotesModal">
+  <div class="modal-content">
+    <h3>💭 Zarządzaj cytatami</h3>
+    <textarea id="customQuotes" placeholder="Wpisz własne cytaty (każdy w nowej linii)" rows="8" style="width:100%;padding:10px;border:1px solid var(--bg-tertiary);border-radius:8px;background:var(--bg-secondary);color:var(--text-primary);box-sizing:border-box;font-family:inherit;margin-bottom:8px"></textarea>
+    <p style="font-size:13px;color:var(--text-secondary);margin:8px 0">Domyślne cytaty + Twoje własne będą losowo wyświetlane</p>
+    <div class="modal-buttons">
+      <button class="btn-secondary" id="cancelQuotesBtn">Anuluj</button>
+      <button class="btn-primary" id="saveQuotesBtn">Zapisz</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <span id="toastText"></span>
+  <button id="toastAction" style="display:none"></button>
+</div>
+
 <script>
 const DAY=86400000;
 const list=document.getElementById("list");
 const themes=['dark','light','ocean'];
 let currentTheme=0;
+let deletedHabit=null;
+let deletedIndex=null;
+
+const defaultQuotes=[
+  "Sukces to suma małych wysiłków powtarzanych dzień po dniu.",
+  "Nie liczy się perfekcja, liczy się konsekwencja.",
+  "Każdy dzień to nowa szansa na bycie lepszą wersją siebie.",
+  "Nawyki budują przyszłość, którą sobie wymarzyłeś.",
+  "Mała zmiana dziś = wielka różnica jutro.",
+  "Nie rezygnuj! Jesteś bliżej niż myślisz.",
+  "Twoja przyszłość jest tworzona przez to, co robisz dzisiaj.",
+  "Motivation gets you started. Habit keeps you going.",
+  "Bądź silniejszy niż twoje wymówki.",
+  "Dzisiaj jest dobry dzień, żeby być produktywnym!"
+];
+
+function showToast(text,actionText,actionCallback){
+  const toast=document.getElementById("toast");
+  const toastText=document.getElementById("toastText");
+  const toastAction=document.getElementById("toastAction");
+  
+  toastText.textContent=text;
+  if(actionText){
+    toastAction.textContent=actionText;
+    toastAction.style.display='block';
+    toastAction.onclick=()=>{
+      actionCallback();
+      toast.classList.remove("show");
+    };
+  }else{
+    toastAction.style.display='none';
+  }
+  
+  toast.classList.add("show");
+  setTimeout(()=>toast.classList.remove("show"),4000);
+}
+
+function getRandomQuote(){
+  const customQuotes=JSON.parse(localStorage.getItem("customQuotes")||"[]");
+  const allQuotes=[...defaultQuotes,...customQuotes];
+  return allQuotes[Math.floor(Math.random()*allQuotes.length)];
+}
+
+function updateQuote(){
+  document.getElementById("quoteText").textContent=getRandomQuote();
+}
 
 function today(){
   const d=new Date();
@@ -340,17 +611,35 @@ if(savedTheme){
 }
 
 function updateStats(){
-  let total=0,max=0,dates={};
+  let total=0,max=0,dates={},categoryCount={};
   habits.forEach(h=>{
     h.datesDone.forEach(d=>{
       total++;dates[d]=(dates[d]||0)+1;
     });
     if(h.streak>max)max=h.streak;
+    
+    // Category stats
+    const cat=h.category||'other';
+    if(!categoryCount[cat])categoryCount[cat]={count:0,days:0};
+    categoryCount[cat].count++;
+    categoryCount[cat].days+=h.datesDone.length;
   });
   const days=Object.keys(dates).length||1;
   totalDone.textContent=total;
   maxStreak.textContent=max;
   avgDaily.textContent=(total/days).toFixed(2);
+  
+  // Category stats display
+  const categoryStats=document.getElementById("categoryStats");
+  const categoryStatsList=document.getElementById("categoryStatsList");
+  const sortButtons=document.getElementById("categorySortButtons");
+  
+  window.categoryData=categoryCount; // Store for sorting
+  
+  if(Object.keys(categoryCount).length>0){
+    categoryStats.style.display='block';
+    renderCategoryStats('days'); // Default sort by days
+  }
   
   // Heat map
   const heatMap=document.getElementById("heatMap");
@@ -363,9 +652,80 @@ function updateStats(){
     const div=document.createElement("div");
     div.className="heat-day";
     if(count>0)div.classList.add(`level-${Math.min(count,4)}`);
-    div.title=`${ds}: ${count} pass${count===1?'a':''}`;
+    
+    const dayNum=d.getDate();
+    div.textContent=dayNum;
+    
+    const monthName=d.toLocaleString("pl-PL",{month:'short'});
+    div.title=`${dayNum} ${monthName}: ${count} pass${count===1?'a':count>=2&&count<=4?'y':''}`;
+    
     heatMap.append(div);
   }
+}
+
+function renderCategoryStats(sortBy){
+  const categoryStatsList=document.getElementById("categoryStatsList");
+  if(!window.categoryData) return;
+  
+  let entries=Object.entries(window.categoryData);
+  
+  // If custom order exists, use it
+  const savedOrder=localStorage.getItem('categoryOrder');
+  if(savedOrder && sortBy==='custom'){
+    const order=JSON.parse(savedOrder);
+    entries.sort((a,b)=>{
+      const indexA=order.indexOf(a[0]);
+      const indexB=order.indexOf(b[0]);
+      if(indexA===-1) return 1;
+      if(indexB===-1) return -1;
+      return indexA-indexB;
+    });
+  }else if(sortBy==='name'){
+    entries.sort((a,b)=>getCategoryLabel(a[0]).localeCompare(getCategoryLabel(b[0])));
+  }else{
+    entries.sort((a,b)=>b[1].days-a[1].days);
+  }
+  
+  categoryStatsList.innerHTML='';
+  let draggedCatIndex=null;
+  
+  entries.forEach(([cat,data],idx)=>{
+    const div=document.createElement("div");
+    div.className="category-stat-item";
+    div.draggable=true;
+    div.style.cursor="move";
+    div.innerHTML=`
+      <span>⋮⋮ ${getCategoryLabel(cat)}</span>
+      <span style="color:var(--accent);font-weight:bold">${data.days} dni (${data.count} pass${data.count===1?'a':''})</span>
+    `;
+    
+    div.ondragstart=()=>{
+      draggedCatIndex=idx;
+      div.style.opacity='0.5';
+    };
+    div.ondragend=()=>{
+      div.style.opacity='1';
+    };
+    div.ondragover=(e)=>{
+      e.preventDefault();
+    };
+    div.ondrop=(e)=>{
+      e.preventDefault();
+      if(draggedCatIndex!==null && draggedCatIndex!==idx){
+        const temp=entries[draggedCatIndex];
+        entries.splice(draggedCatIndex,1);
+        entries.splice(idx,0,temp);
+        
+        // Save custom order
+        const newOrder=entries.map(e=>e[0]);
+        localStorage.setItem('categoryOrder',JSON.stringify(newOrder));
+        
+        renderCategoryStats('custom');
+      }
+    };
+    
+    categoryStatsList.append(div);
+  });
 }
 
 function renderCalendar(h){
@@ -461,40 +821,63 @@ function getCategoryColor(category){
 }
 
 function render(){
-  list.innerHTML="";
-  habits.forEach((h,i)=>{
-    const div=document.createElement("div");
-    div.className="habit";
-    div.draggable=true;
-    
-    div.style.borderLeftColor=getCategoryColor(h.category||'other');
+  const emptyState=document.getElementById("emptyState");
+  const categoryStats=document.getElementById("categoryStats");
+  
+  if(habits.length===0){
+    list.innerHTML="";
+    emptyState.style.display='block';
+    categoryStats.style.display='none';
+    updateStats();
+    return;
+  }
+  
+  emptyState.style.display='none';
+  
+  // Show loading skeletons
+  list.innerHTML='<div class="loading-skeleton"></div><div class="loading-skeleton"></div>';
+  
+  setTimeout(()=>{
+    list.innerHTML="";
+    habits.forEach((h,i)=>{
+      const div=document.createElement("div");
+      div.className="habit";
+      
+      div.style.borderLeftColor=getCategoryColor(h.category||'other');
+      
+      const streakEmoji=h.streakEmoji||'🔥';
 
-    div.innerHTML=`
-      <span class="category-badge cat-${h.category||'other'}">${getCategoryLabel(h.category||'other')}</span>
-      <div class="habit-header">
-        <div>
-          <div class="name">${h.name}</div>
-          <div class="streak">🔥 ${h.streak}</div>
+      div.innerHTML=`
+        <div class="drag-handle" draggable="true" style="cursor:move;padding:4px;margin:-16px -16px 8px -16px;background:var(--bg-tertiary);border-radius:14px 14px 0 0;text-align:center;color:var(--text-secondary);font-size:20px">⋮⋮</div>
+        <span class="category-badge cat-${h.category||'other'}">${getCategoryLabel(h.category||'other')}</span>
+        <div class="habit-header">
+          <div>
+            <div class="name">${h.name}</div>
+            <div class="streak" id="streak-${i}">${streakEmoji} ${h.streak}</div>
+          </div>
+          <div class="actions">
+            <button class="done">Zrobione dziś</button>
+            <button class="freeze">${h.freeze?"Odmróź":"Freeze"}</button>
+            <button class="more">⋯</button>
+          </div>
         </div>
-        <div class="actions">
-          <button class="done">Zrobione dziś</button>
-          <button class="freeze">${h.freeze?"Odmróź":"Freeze"}</button>
-          <button class="more">⋯</button>
+        <div class="menu">
+          <button class="closeMenu">❌ Zamknij</button>
+          <button class="editHist">✏️ Edytuj historię</button>
+          <button class="renameHabit">✍️ Zmień nazwę</button>
+          <button class="changeCat">🏷️ Zmień kategorię</button>
+          <button class="changeEmoji">🔥 Zmień emoji</button>
+          <button class="deleteHist">🗑 Usuń passę</button>
         </div>
-      </div>
-      <div class="menu">
-        <button class="editHist">✏️ Edytuj historię</button>
-        <button class="changeCat">🏷️ Zmień kategorię</button>
-        <button class="deleteHist">🗑 Usuń passę</button>
-      </div>
-    `;
+      `;
 
-    // Drag & drop
-    div.ondragstart=(e)=>{
+    // Drag & drop - only from handle
+    const handle=div.querySelector('.drag-handle');
+    handle.ondragstart=(e)=>{
       draggedIndex=i;
       div.classList.add('dragging');
     };
-    div.ondragend=()=>{
+    handle.ondragend=()=>{
       div.classList.remove('dragging');
     };
     div.ondragover=(e)=>{
@@ -512,7 +895,17 @@ function render(){
     };
 
     const menu=div.querySelector(".menu");
-    div.querySelector(".more").onclick=()=>{menu.style.display=menu.style.display==="block"?"none":"block";};
+    const moreBtn=div.querySelector(".more");
+    
+    moreBtn.onclick=(e)=>{
+      e.stopPropagation();
+      document.querySelectorAll('.menu').forEach(m=>m.style.display='none');
+      menu.style.display=menu.style.display==="block"?"none":"block";
+    };
+    
+    div.querySelector(".closeMenu").onclick=()=>{
+      menu.style.display="none";
+    };
 
     const toggle=document.createElement("button");
     toggle.className="toggle-cal";
@@ -523,6 +916,15 @@ function render(){
     toggle.onclick=()=>{h.calendarOpen=!h.calendarOpen; save(); render();};
 
     div.querySelector(".editHist").onclick=()=>{h.editing=!h.editing; menu.style.display="none"; save(); render();};
+    div.querySelector(".renameHabit").onclick=()=>{
+      menu.style.display="none";
+      const newName=prompt("Nowa nazwa passy:",h.name);
+      if(newName && newName.trim()){
+        h.name=newName.trim();
+        save();
+        render();
+      }
+    };
     div.querySelector(".changeCat").onclick=()=>{
       menu.style.display="none";
       const editCatModal=document.getElementById("editCategoryModal");
@@ -530,15 +932,53 @@ function render(){
       editCatModal.dataset.habitIndex=i;
       document.getElementById("editCategorySelect").value=h.category||'other';
     };
-    div.querySelector(".deleteHist").onclick=()=>{if(confirm("Usunąć passę?")){habits.splice(i,1); save(); render();}};
-    div.querySelector(".done").onclick=()=>{if(h.freeze) return; if(!h.datesDone.includes(today())){h.datesDone.push(today()); h.streak++; save(); render();}};
+    div.querySelector(".changeEmoji").onclick=()=>{
+      menu.style.display="none";
+      const emojiModal=document.getElementById("streakEmojiModal");
+      emojiModal.classList.add("show");
+      emojiModal.dataset.habitIndex=i;
+      document.getElementById("streakEmoji").value=h.streakEmoji||'';
+    };
+    div.querySelector(".deleteHist").onclick=(e)=>{
+      e.stopPropagation();
+      menu.style.display="none";
+      setTimeout(()=>{
+        if(confirm(`Jesteś pewien? Stracisz passę ${h.streakEmoji||'🔥'}${h.streak}!`)){
+          deletedHabit={...h};
+          deletedIndex=i;
+          habits.splice(i,1);
+          save();
+          render();
+          showToast("Passa usunięta","Cofnij",()=>{
+            habits.splice(deletedIndex,0,deletedHabit);
+            save();
+            render();
+          });
+        }
+      },100);
+    };
+    div.querySelector(".done").onclick=()=>{
+      if(h.freeze) return;
+      if(!h.datesDone.includes(today())){
+        h.datesDone.push(today());
+        h.streak++;
+        save();
+        render();
+        // Animate streak
+        setTimeout(()=>{
+          const streakEl=document.getElementById(`streak-${i}`);
+          if(streakEl) streakEl.classList.add('streak-bounce');
+        },50);
+      }
+    };
     div.querySelector(".freeze").onclick=()=>{h.freeze=!h.freeze; div.classList.add("ice"); setTimeout(()=>div.classList.remove("ice"),800); save(); render();};
 
     div.append(toggle,cont);
     list.append(div);
-    setTimeout(()=>div.classList.add("show"),10);
+    setTimeout(()=>div.classList.add("show"),10+i*50);
   });
   updateStats();
+  },100); // End of setTimeout for loading skeleton
 }
 
 // Modal
@@ -609,6 +1049,104 @@ document.getElementById("saveEditCatBtn").onclick=()=>{
 editCatModal.onclick=(e)=>{
   if(e.target===editCatModal) editCatModal.classList.remove("show");
 };
+
+// Streak Emoji Modal
+const streakEmojiModal=document.getElementById("streakEmojiModal");
+
+document.getElementById("cancelStreakEmojiBtn").onclick=()=>{
+  streakEmojiModal.classList.remove("show");
+};
+
+document.getElementById("saveStreakEmojiBtn").onclick=()=>{
+  const idx=parseInt(streakEmojiModal.dataset.habitIndex);
+  const emoji=document.getElementById("streakEmoji").value.trim();
+  habits[idx].streakEmoji=emoji||'🔥';
+  save();
+  render();
+  streakEmojiModal.classList.remove("show");
+};
+
+streakEmojiModal.onclick=(e)=>{
+  if(e.target===streakEmojiModal) streakEmojiModal.classList.remove("show");
+};
+
+// Quote refresh
+document.getElementById("quoteRefresh").onclick=updateQuote;
+
+// Category stats toggle
+document.getElementById("categoryStatsToggle").onclick=()=>{
+  const list=document.getElementById("categoryStatsList");
+  const toggle=document.getElementById("categoryStatsToggle");
+  const sortButtons=document.getElementById("categorySortButtons");
+  if(list.style.display==='none'){
+    list.style.display='block';
+    sortButtons.style.display='block';
+    toggle.innerHTML='📈 Statystyki per kategoria <span style="float:right">▲</span>';
+  }else{
+    list.style.display='none';
+    sortButtons.style.display='none';
+    toggle.innerHTML='📈 Statystyki per kategoria <span style="float:right">▼</span>';
+  }
+};
+
+// Category sort buttons
+document.getElementById("sortByName").onclick=()=>{
+  renderCategoryStats('name');
+};
+
+document.getElementById("sortByDays").onclick=()=>{
+  renderCategoryStats('days');
+};
+
+// Heat map toggle
+document.getElementById("heatMapToggle").onclick=()=>{
+  const container=document.getElementById("heatMapContainer");
+  const toggle=document.getElementById("heatMapToggle");
+  if(container.style.display==='none'){
+    container.style.display='block';
+    toggle.innerHTML='📊 Aktywność (ostatnie 28 dni) <span style="float:right">▲</span>';
+  }else{
+    container.style.display='none';
+    toggle.innerHTML='📊 Aktywność (ostatnie 28 dni) <span style="float:right">▼</span>';
+  }
+};
+
+// Settings button - add to header for managing quotes
+const settingsBtn=document.createElement("button");
+settingsBtn.className="theme-toggle";
+settingsBtn.style.left="0";
+settingsBtn.style.right="auto";
+settingsBtn.textContent="💭";
+settingsBtn.onclick=()=>{
+  const quotesModal=document.getElementById("manageQuotesModal");
+  quotesModal.classList.add("show");
+  const customQuotes=JSON.parse(localStorage.getItem("customQuotes")||"[]");
+  document.getElementById("customQuotes").value=customQuotes.join("\n");
+};
+document.querySelector(".header").append(settingsBtn);
+
+// Manage Quotes Modal
+const quotesModal=document.getElementById("manageQuotesModal");
+
+document.getElementById("cancelQuotesBtn").onclick=()=>{
+  quotesModal.classList.remove("show");
+};
+
+document.getElementById("saveQuotesBtn").onclick=()=>{
+  const text=document.getElementById("customQuotes").value;
+  const quotes=text.split("\n").map(q=>q.trim()).filter(q=>q);
+  localStorage.setItem("customQuotes",JSON.stringify(quotes));
+  quotesModal.classList.remove("show");
+  updateQuote();
+  showToast("Cytaty zapisane! 💾");
+};
+
+quotesModal.onclick=(e)=>{
+  if(e.target===quotesModal) quotesModal.classList.remove("show");
+};
+
+// Initialize quote
+updateQuote();
 
 render();
 </script>
