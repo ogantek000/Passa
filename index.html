@@ -138,6 +138,10 @@ h1{margin:6px 0 2px;color:var(--accent)}
 .habit.show{opacity:1;transform:none}
 .habit.dragging{opacity:0.5;transform:scale(0.98)}
 .habit.menu-open{z-index:200}
+.habit.editing-mode{
+  border:2px solid #f97316;
+  box-shadow:0 0 0 3px rgba(249,115,22,0.2);
+}
 
 .habit.ice::after{
   content:"";position:absolute;inset:0;
@@ -163,10 +167,30 @@ h1{margin:6px 0 2px;color:var(--accent)}
   display:flex;flex-direction:column;gap:12px
 }
 .habit-info{
-  display:flex;justify-content:space-between;align-items:center
+  display:flex;flex-direction:column;align-items:center;gap:6px
 }
-.name{font-size:18px;font-weight:600}
-.streak{font-size:20px;color:#ff9500}
+.name{font-size:18px;font-weight:600;text-align:center}
+.streak{
+  font-size:24px;color:#ff9500;
+  position:relative;
+  overflow:hidden;
+  min-height:30px;
+  display:flex;align-items:center;justify-content:center;
+}
+.streak-number{
+  display:inline-block;
+  animation:slideDown .4s ease-out;
+}
+@keyframes slideDown{
+  from{
+    transform:translateY(-100%);
+    opacity:0;
+  }
+  to{
+    transform:translateY(0);
+    opacity:1;
+  }
+}
 
 .actions{display:flex;gap:6px;flex-wrap:wrap}
 .actions button{
@@ -188,21 +212,33 @@ h1{margin:6px 0 2px;color:var(--accent)}
 
 .menu{
   position:absolute;right:12px;top:52px;
-  background:var(--bg-primary);border-radius:10px;
+  background:var(--bg-primary);border-radius:12px;
   overflow:hidden;display:none;
-  box-shadow:0 10px 30px rgba(0,0,0,.5);z-index:100;
+  box-shadow:0 8px 24px rgba(0,0,0,.6);z-index:100;
   border:1px solid var(--bg-tertiary);
+  min-width:200px;
 }
 .menu button{
-  width:100%;padding:14px 16px;
+  width:100%;padding:12px 16px;
   background:none;border:none;color:var(--text-primary);
   text-align:left;cursor:pointer;
-  font-size:15px;
-  min-height:48px;
+  font-size:14px;
+  min-height:44px;
   transition:background .2s;
+  display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid var(--bg-tertiary);
+}
+.menu button:last-child{
+  border-bottom:none;
 }
 .menu button:hover{background:var(--bg-secondary)}
 .menu button:active{background:var(--bg-tertiary)}
+.menu button.danger{
+  color:var(--danger);
+}
+.menu button.danger:hover{
+  background:rgba(239,68,68,0.1);
+}
 
 .toggle-cal{
   width:100%;margin-top:8px;
@@ -417,7 +453,7 @@ h1{margin:6px 0 2px;color:var(--accent)}
 
 <div class="header">
   <button class="theme-toggle" id="themeBtn">🌙</button>
-  <img src="bro" class="mascot">
+  <img src="bro.jpg" class="mascot">
   <h1>Keepy</h1>
   <p class="motto">Keep Going</p>
   <div id="countdown">--:--:--</div>
@@ -429,37 +465,29 @@ h1{margin:6px 0 2px;color:var(--accent)}
   <div><div>Średnia dzienna</div><div id="avgDaily">0</div></div>
 </div>
 
-<div class="quote-box" id="quoteBox" data-section="quote" draggable="true">
-  <div class="drag-section-handle" style="cursor:move;text-align:center;color:var(--text-secondary);font-size:16px;margin-bottom:8px">⋮⋮</div>
+<div class="quote-box" id="quoteBox">
   <div class="quote-text" id="quoteText"></div>
   <div style="position:absolute;right:12px;top:12px;display:flex;gap:6px">
-    <button class="lang-flag" data-lang="pl" style="background:none;border:none;font-size:20px;cursor:pointer;opacity:0.5;transition:opacity .2s">🇵🇱</button>
-    <button class="lang-flag" data-lang="en" style="background:none;border:none;font-size:20px;cursor:pointer;opacity:0.5;transition:opacity .2s">🇬🇧</button>
-    <button class="lang-flag" data-lang="es" style="background:none;border:none;font-size:20px;cursor:pointer;opacity:0.5;transition:opacity .2s">🇪🇸</button>
-    <button class="quote-refresh" id="quoteRefresh" style="background:var(--bg-tertiary);border:none;width:36px;height:36px;border-radius:50%;font-size:16px;cursor:pointer;transition:transform .3s">🔄</button>
+    <button class="lang-flag" data-lang="pl" style="background:none;border:none;font-size:20px;cursor:pointer;opacity:0.5;transition:opacity .2s,transform .2s">🇵🇱</button>
+    <button class="lang-flag" data-lang="en" style="background:none;border:none;font-size:20px;cursor:pointer;opacity:0.5;transition:opacity .2s,transform .2s">🇬🇧</button>
+    <button class="lang-flag" data-lang="es" style="background:none;border:none;font-size:20px;cursor:pointer;opacity:0.5;transition:opacity .2s,transform .2s">🇪🇸</button>
   </div>
 </div>
 
-<div class="charts" data-section="heatmap" draggable="true">
-  <div class="drag-section-handle" style="cursor:move;text-align:center;color:var(--text-secondary);font-size:16px;margin-bottom:8px">⋮⋮</div>
+<div class="charts">
   <h3 style="font-size:16px;color:var(--text-secondary);margin:0 0 8px;cursor:pointer" id="heatMapToggle">
     📊 Aktywność (ostatnie 28 dni) <span style="float:right">▼</span>
   </h3>
-  <div id="heatMapContainer">
+  <div id="heatMapContainer" style="display:none">
     <p style="font-size:13px;color:var(--text-secondary);margin:0 0 12px">Każdy kwadrat to jeden dzień. Im ciemniejszy kolor, tym więcej pass zrobiłeś tego dnia.</p>
     <div class="heat-map" id="heatMap"></div>
   </div>
 </div>
 
-<div class="category-stats" id="categoryStats" style="display:none" data-section="categories" draggable="true">
-  <div class="drag-section-handle" style="cursor:move;text-align:center;color:var(--text-secondary);font-size:16px;margin-bottom:8px">⋮⋮</div>
+<div class="category-stats" id="categoryStats" style="display:none">
   <h3 style="font-size:16px;color:var(--text-secondary);margin:0 0 12px;cursor:pointer" id="categoryStatsToggle">
     📈 Statystyki per kategoria <span style="float:right">▼</span>
   </h3>
-  <div style="display:none;margin-bottom:8px" id="categorySortButtons">
-    <button class="btn-secondary" id="sortByName" style="padding:6px 12px;margin-right:6px;font-size:13px">Sortuj: Nazwa</button>
-    <button class="btn-secondary" id="sortByDays" style="padding:6px 12px;font-size:13px">Sortuj: Dni</button>
-  </div>
   <div id="categoryStatsList" style="display:none"></div>
 </div>
 
@@ -634,13 +662,25 @@ function showToast(text,actionText,actionCallback){
   setTimeout(()=>toast.classList.remove("show"),4000);
 }
 
-function getRandomQuote(){
-  currentQuoteIndex=Math.floor(Math.random()*defaultQuotes.length);
+function getDailyQuote(){
+  const savedDate=localStorage.getItem('quoteDate');
+  const savedIndex=localStorage.getItem('quoteIndex');
+  const currentDate=today();
+  
+  // Check if we need new quote (new day)
+  if(savedDate!==currentDate || !savedIndex){
+    currentQuoteIndex=Math.floor(Math.random()*defaultQuotes.length);
+    localStorage.setItem('quoteDate',currentDate);
+    localStorage.setItem('quoteIndex',currentQuoteIndex);
+  }else{
+    currentQuoteIndex=parseInt(savedIndex);
+  }
+  
   return defaultQuotes[currentQuoteIndex][currentQuoteLang];
 }
 
 function updateQuote(){
-  const quote=getRandomQuote();
+  const quote=getDailyQuote();
   document.getElementById("quoteText").textContent=quote;
   updateLangFlags();
 }
@@ -731,7 +771,7 @@ function updateStats(){
   
   if(Object.keys(categoryCount).length>0){
     categoryStats.style.display='block';
-    renderCategoryStats('days'); // Default sort by days
+    renderCategoryStats();
   }
   
   // Heat map
@@ -756,17 +796,14 @@ function updateStats(){
   }
 }
 
-function renderCategoryStats(sortBy){
+function renderCategoryStats(){
   const categoryStatsList=document.getElementById("categoryStatsList");
   if(!window.categoryData) return;
   
   let entries=Object.entries(window.categoryData);
   
-  if(sortBy==='name'){
-    entries.sort((a,b)=>getCategoryLabel(a[0]).localeCompare(getCategoryLabel(b[0])));
-  }else{
-    entries.sort((a,b)=>b[1].days-a[1].days);
-  }
+  // Always sort by days (descending)
+  entries.sort((a,b)=>b[1].days-a[1].days);
   
   categoryStatsList.innerHTML='';
   
@@ -895,6 +932,7 @@ function render(){
     habits.forEach((h,i)=>{
       const div=document.createElement("div");
       div.className="habit";
+      if(h.editing) div.classList.add('editing-mode');
       
       div.style.borderLeftColor=getCategoryColor(h.category||'other');
       
@@ -906,7 +944,7 @@ function render(){
         <div class="habit-header">
           <div class="habit-info">
             <div class="name">${h.name}</div>
-            <div class="streak" id="streak-${i}">${streakEmoji} ${h.streak}</div>
+            <div class="streak" id="streak-${i}"><span class="streak-number">${streakEmoji} ${h.streak}</span></div>
           </div>
           <div class="actions">
             <button class="done">✓ Zrobione</button>
@@ -919,7 +957,7 @@ function render(){
           <button class="renameHabit">✍️ Zmień nazwę</button>
           <button class="changeCat">🏷️ Zmień kategorię</button>
           <button class="changeEmoji">🔥 Zmień emoji</button>
-          <button class="deleteHist">🗑 Usuń passę</button>
+          <button class="deleteHist danger">🗑 Usuń passę</button>
         </div>
       `;
 
@@ -967,7 +1005,18 @@ function render(){
 
     toggle.onclick=()=>{h.calendarOpen=!h.calendarOpen; save(); render();};
 
-    div.querySelector(".editHist").onclick=()=>{h.editing=!h.editing; menu.style.display="none"; save(); render();};
+    div.querySelector(".editHist").onclick=()=>{
+      h.editing=!h.editing;
+      if(h.editing){
+        if(!h.calendarOpen) h.calendarOpen=true;
+        div.classList.add('editing-mode');
+      }else{
+        div.classList.remove('editing-mode');
+      }
+      menu.style.display="none";
+      save();
+      render();
+    };
     div.querySelector(".renameHabit").onclick=()=>{
       menu.style.display="none";
       const newName=prompt("Nowa nazwa passy:",h.name);
@@ -1016,10 +1065,18 @@ function render(){
         h.streak++;
         save();
         render();
-        // Animate streak
+        // Animate streak - add class to trigger animation
         setTimeout(()=>{
           const streakEl=document.getElementById(`streak-${i}`);
-          if(streakEl) streakEl.classList.add('streak-bounce');
+          if(streakEl){
+            const numberEl=streakEl.querySelector('.streak-number');
+            if(numberEl){
+              numberEl.style.animation='none';
+              setTimeout(()=>{
+                numberEl.style.animation='slideDown .4s ease-out';
+              },10);
+            }
+          }
         },50);
       }
     };
@@ -1122,9 +1179,6 @@ streakEmojiModal.onclick=(e)=>{
   if(e.target===streakEmojiModal) streakEmojiModal.classList.remove("show");
 };
 
-// Quote refresh
-document.getElementById("quoteRefresh").onclick=updateQuote;
-
 // Language flags
 document.querySelectorAll('.lang-flag').forEach(btn=>{
   btn.onclick=(e)=>{
@@ -1141,25 +1195,13 @@ if(savedLang) currentQuoteLang=savedLang;
 document.getElementById("categoryStatsToggle").onclick=()=>{
   const list=document.getElementById("categoryStatsList");
   const toggle=document.getElementById("categoryStatsToggle");
-  const sortButtons=document.getElementById("categorySortButtons");
   if(list.style.display==='none'){
     list.style.display='block';
-    sortButtons.style.display='block';
     toggle.innerHTML='📈 Statystyki per kategoria <span style="float:right">▲</span>';
   }else{
     list.style.display='none';
-    sortButtons.style.display='none';
     toggle.innerHTML='📈 Statystyki per kategoria <span style="float:right">▼</span>';
   }
-};
-
-// Category sort buttons
-document.getElementById("sortByName").onclick=()=>{
-  renderCategoryStats('name');
-};
-
-document.getElementById("sortByDays").onclick=()=>{
-  renderCategoryStats('days');
 };
 
 // Heat map toggle
@@ -1216,78 +1258,6 @@ quotesModal.onclick=(e)=>{
 // Initialize quote
 updateQuote();
 
-// Drag & drop for sections
-let draggedSection=null;
-const sections=[
-  document.getElementById('quoteBox'),
-  document.querySelector('.charts'),
-  document.getElementById('categoryStats')
-];
-
-function setupSectionDragDrop(){
-  sections.forEach((section,idx)=>{
-    const handle=section.querySelector('.drag-section-handle');
-    if(!handle) return;
-    
-    handle.ondragstart=(e)=>{
-      draggedSection=section;
-      section.style.opacity='0.5';
-    };
-    
-    handle.ondragend=()=>{
-      section.style.opacity='1';
-      draggedSection=null;
-    };
-    
-    section.ondragover=(e)=>{
-      e.preventDefault();
-    };
-    
-    section.ondrop=(e)=>{
-      e.preventDefault();
-      if(draggedSection && draggedSection!==section){
-        const parent=section.parentNode;
-        const allSections=Array.from(parent.children).filter(el=>
-          el.dataset.section || el===draggedSection
-        );
-        const draggedIdx=allSections.indexOf(draggedSection);
-        const targetIdx=allSections.indexOf(section);
-        
-        if(draggedIdx<targetIdx){
-          parent.insertBefore(draggedSection,section.nextSibling);
-        }else{
-          parent.insertBefore(draggedSection,section);
-        }
-        
-        // Save order
-        const order=Array.from(parent.children)
-          .filter(el=>el.dataset.section)
-          .map(el=>el.dataset.section);
-        localStorage.setItem('sectionOrder',JSON.stringify(order));
-      }
-    };
-  });
-}
-
-// Restore section order
-function restoreSectionOrder(){
-  const savedOrder=localStorage.getItem('sectionOrder');
-  if(!savedOrder) return;
-  
-  const order=JSON.parse(savedOrder);
-  const statsDiv=document.getElementById('stats');
-  
-  order.forEach(sectionName=>{
-    const section=document.querySelector(`[data-section="${sectionName}"]`);
-    if(section && statsDiv.nextSibling){
-      statsDiv.parentNode.insertBefore(section,statsDiv.nextSibling);
-    }
-  });
-}
-
-restoreSectionOrder();
-setupSectionDragDrop();
-
 // Close menu when clicking outside
 document.addEventListener('click',(e)=>{
   if(!e.target.closest('.menu') && !e.target.closest('.more')){
@@ -1300,4 +1270,3 @@ render();
 </script>
 </body>
 </html>
-
