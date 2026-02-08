@@ -17,10 +17,7 @@ h1{margin:6px 0 2px;color:#3b82f6}
 .motto{color:#94a3b8;font-size:14px}
 
 #countdown{
-  font-size:18px;
-  font-weight:600;
-  color:#e5e7eb;
-  margin:6px 0 14px;
+  font-size:18px;font-weight:600;color:#e5e7eb;margin:6px 0 14px;
 }
 
 #stats{
@@ -55,7 +52,7 @@ h1{margin:6px 0 2px;color:#3b82f6}
 
 .actions{display:flex;gap:6px}
 .actions button{
-  padding:6px 10px;border:none;border-radius:8px
+  padding:6px 10px;border:none;border-radius:8px;cursor:pointer
 }
 .done{background:#22c55e}
 .freeze{background:#facc15}
@@ -65,29 +62,35 @@ h1{margin:6px 0 2px;color:#3b82f6}
   position:absolute;right:12px;top:52px;
   background:#020617;border-radius:10px;
   overflow:hidden;display:none;
-  box-shadow:0 10px 30px rgba(0,0,0,.5)
+  box-shadow:0 10px 30px rgba(0,0,0,.5);z-index:2
 }
 .menu button{
   width:100%;padding:10px 14px;
   background:none;border:none;color:white;
-  text-align:left
+  text-align:left;cursor:pointer
 }
 .menu button:hover{background:rgba(255,255,255,.08)}
 
 .toggle-cal{
   width:100%;margin-top:8px;
   padding:8px;border:none;border-radius:8px;
-  background:#3b82f6;color:white
+  background:#3b82f6;color:white;cursor:pointer
 }
 
 .calendar-container{margin-top:8px}
 .calendar-header{
   display:flex;justify-content:space-between;
   align-items:center;margin-bottom:4px;
+  visibility:hidden; /* domyślnie ukryty */
 }
-.calendar-header button{
-  background:#1e293b;color:white;border:none;
-  border-radius:4px;padding:4px 10px
+.calendar-header button,
+.calendar-header span{
+  visibility:hidden;
+}
+.calendar.show .calendar-header,
+.calendar.show .calendar-header button,
+.calendar.show .calendar-header span{
+  visibility:visible; /* widoczne tylko po rozwinięciu */
 }
 
 .calendar{
@@ -111,13 +114,13 @@ h1{margin:6px 0 2px;color:#3b82f6}
 
 .day.done{background:#22c55e;color:black}
 .day.freeze{background:#facc15;color:black}
-.day.missed{background:#ef4444}
+.day.missed{background:#ef4444;color:white}
 .day.locked{opacity:.35}
 
 .add{
   position:fixed;bottom:24px;right:24px;
   width:56px;height:56px;border-radius:50%;
-  background:#22c55e;font-size:32px;border:none
+  background:#22c55e;font-size:32px;border:none;cursor:pointer
 }
 </style>
 </head>
@@ -207,14 +210,13 @@ function renderCalendar(h){
   header.append(l,title,r);
 
   const first=(new Date(ref.getFullYear(),ref.getMonth(),1).getDay()+6)%7;
-  const days=new Date(ref.getFullYear(),ref.getMonth()+1,0).getDate();
+  const daysInMonth=new Date(ref.getFullYear(),ref.getMonth()+1,0).getDate();
 
   for(let i=0;i<first;i++)cal.append(document.createElement("div"));
 
-  for(let d=1;d<=days;d++){
+  for(let d=1;d<=daysInMonth;d++){
     const date=new Date(ref.getFullYear(),ref.getMonth(),d);
-    const ds=new Date(date.getTime()-date.getTimezoneOffset()*60000)
-      .toISOString().slice(0,10);
+    const ds=new Date(date.getTime()-date.getTimezoneOffset()*60000).toISOString().slice(0,10);
 
     const diff=(new Date(today())-new Date(ds))/DAY;
     const editable=diff>=0 && diff<=7;
@@ -223,11 +225,11 @@ function renderCalendar(h){
     div.className="day";
     div.textContent=d;
 
-    if(h.datesDone.includes(ds))div.classList.add("done");
-    else if(h.freezeDates.includes(ds))div.classList.add("freeze");
-    else if(diff>0)div.classList.add("missed");
+    if(h.datesDone.includes(ds)) div.classList.add("done");
+    else if(h.freezeDates.includes(ds)) div.classList.add("freeze");
+    else if(diff>0) div.classList.add("missed");
 
-    if(!editable)div.classList.add("locked");
+    if(!editable) div.classList.add("locked");
 
     div.onclick=()=>{
       if(!h.editing || !editable)return;
@@ -273,9 +275,7 @@ function render(){
     `;
 
     const menu=div.querySelector(".menu");
-    div.querySelector(".more").onclick=()=>{
-      menu.style.display=menu.style.display==="block"?"none":"block";
-    };
+    div.querySelector(".more").onclick=()=>{menu.style.display=menu.style.display==="block"?"none":"block";};
 
     const toggle=document.createElement("button");
     toggle.className="toggle-cal";
