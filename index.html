@@ -8,14 +8,6 @@
 <title>Keepy – Keep Going</title>
 <link rel="icon" href="icon.png">
 
-
-
-
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#3b82f6">
-<link rel="apple-touch-icon" href="icon.png">
-
-  
 <style>
 :root {
   --bg-primary: #0f172a;
@@ -65,6 +57,17 @@ body{
   -moz-osx-font-smoothing:grayscale;
   -webkit-tap-highlight-color:transparent;
   overscroll-behavior:none;
+  -webkit-user-select:none;
+  -moz-user-select:none;
+  -ms-user-select:none;
+  user-select:none;
+}
+
+input, textarea, [contenteditable]{
+  -webkit-user-select:text;
+  -moz-user-select:text;
+  -ms-user-select:text;
+  user-select:text;
 }
 
 .header{text-align:center;margin-bottom:10px;position:relative}
@@ -157,18 +160,23 @@ h1{margin:6px 0 2px;color:var(--accent)}
 .cat-other{background:#6b7280;color:white}
 
 .habit-header{
+  display:flex;flex-direction:column;gap:12px
+}
+.habit-info{
   display:flex;justify-content:space-between;align-items:center
 }
-.name{font-size:18px}
+.name{font-size:18px;font-weight:600}
 .streak{font-size:20px;color:#ff9500}
 
-.actions{display:flex;gap:8px;flex-wrap:wrap}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
 .actions button{
-  padding:10px 14px;border:none;border-radius:10px;cursor:pointer;
-  font-size:14px;
-  min-height:44px;
+  padding:8px 12px;border:none;border-radius:8px;cursor:pointer;
+  font-size:13px;
+  min-height:38px;
   font-weight:500;
   transition:transform .2s, opacity .2s;
+  flex:1;
+  min-width:90px;
 }
 .actions button:active{
   transform:scale(0.95);
@@ -176,7 +184,7 @@ h1{margin:6px 0 2px;color:var(--accent)}
 }
 .done{background:var(--success);color:white}
 .freeze{background:var(--warning);color:black}
-.more{background:var(--bg-tertiary);color:var(--text-primary);font-size:20px;min-width:44px}
+.more{background:var(--bg-tertiary);color:var(--text-primary);font-size:18px;min-width:38px;flex:0}
 
 .menu{
   position:absolute;right:12px;top:52px;
@@ -409,7 +417,7 @@ h1{margin:6px 0 2px;color:var(--accent)}
 
 <div class="header">
   <button class="theme-toggle" id="themeBtn">🌙</button>
-  <img src="bro" class="mascot">
+  <img src="bro.jpg" class="mascot">
   <h1>Keepy</h1>
   <p class="motto">Keep Going</p>
   <div id="countdown">--:--:--</div>
@@ -424,7 +432,12 @@ h1{margin:6px 0 2px;color:var(--accent)}
 <div class="quote-box" id="quoteBox" data-section="quote" draggable="true">
   <div class="drag-section-handle" style="cursor:move;text-align:center;color:var(--text-secondary);font-size:16px;margin-bottom:8px">⋮⋮</div>
   <div class="quote-text" id="quoteText"></div>
-  <button class="quote-refresh" id="quoteRefresh">🔄</button>
+  <div style="position:absolute;right:12px;top:12px;display:flex;gap:6px">
+    <button class="lang-flag" data-lang="pl" style="background:none;border:none;font-size:20px;cursor:pointer;opacity:0.5;transition:opacity .2s">🇵🇱</button>
+    <button class="lang-flag" data-lang="en" style="background:none;border:none;font-size:20px;cursor:pointer;opacity:0.5;transition:opacity .2s">🇬🇧</button>
+    <button class="lang-flag" data-lang="es" style="background:none;border:none;font-size:20px;cursor:pointer;opacity:0.5;transition:opacity .2s">🇪🇸</button>
+    <button class="quote-refresh" id="quoteRefresh" style="background:var(--bg-tertiary);border:none;width:36px;height:36px;border-radius:50%;font-size:16px;cursor:pointer;transition:transform .3s">🔄</button>
+  </div>
 </div>
 
 <div class="charts" data-section="heatmap" draggable="true">
@@ -515,8 +528,15 @@ h1{margin:6px 0 2px;color:var(--accent)}
 <div class="modal" id="manageQuotesModal">
   <div class="modal-content">
     <h3>💭 Zarządzaj cytatami</h3>
+    <label style="font-size:14px;color:var(--text-secondary);display:block;margin-bottom:8px">Język domyślnych cytatów:</label>
+    <select id="quoteLanguage" style="width:100%;padding:10px;margin-bottom:12px;border:1px solid var(--bg-tertiary);border-radius:8px;background:var(--bg-secondary);color:var(--text-primary);box-sizing:border-box">
+      <option value="pl">🇵🇱 Polski</option>
+      <option value="en">🇬🇧 Angielski</option>
+      <option value="es">🇪🇸 Hiszpański</option>
+    </select>
+    <label style="font-size:14px;color:var(--text-secondary);display:block;margin-bottom:8px">Własne cytaty:</label>
     <textarea id="customQuotes" placeholder="Wpisz własne cytaty (każdy w nowej linii)" rows="8" style="width:100%;padding:10px;border:1px solid var(--bg-tertiary);border-radius:8px;background:var(--bg-secondary);color:var(--text-primary);box-sizing:border-box;font-family:inherit;margin-bottom:8px"></textarea>
-    <p style="font-size:13px;color:var(--text-secondary);margin:8px 0">Domyślne cytaty + Twoje własne będą losowo wyświetlane</p>
+    <p style="font-size:13px;color:var(--text-secondary);margin:8px 0">Domyślne cytaty w wybranym języku + Twoje własne będą losowo wyświetlane</p>
     <div class="modal-buttons">
       <button class="btn-secondary" id="cancelQuotesBtn">Anuluj</button>
       <button class="btn-primary" id="saveQuotesBtn">Zapisz</button>
@@ -538,17 +558,60 @@ let deletedHabit=null;
 let deletedIndex=null;
 
 const defaultQuotes=[
-  "Sukces to suma małych wysiłków powtarzanych dzień po dniu.",
-  "Nie liczy się perfekcja, liczy się konsekwencja.",
-  "Każdy dzień to nowa szansa na bycie lepszą wersją siebie.",
-  "Nawyki budują przyszłość, którą sobie wymarzyłeś.",
-  "Mała zmiana dziś = wielka różnica jutro.",
-  "Nie rezygnuj! Jesteś bliżej niż myślisz.",
-  "Twoja przyszłość jest tworzona przez to, co robisz dzisiaj.",
-  "Motivation gets you started. Habit keeps you going.",
-  "Bądź silniejszy niż twoje wymówki.",
-  "Dzisiaj jest dobry dzień, żeby być produktywnym!"
+  {
+    pl: "Sukces to suma małych wysiłków powtarzanych dzień po dniu.",
+    en: "Success is the sum of small efforts repeated day after day.",
+    es: "El éxito es la suma de pequeños esfuerzos repetidos día tras día."
+  },
+  {
+    pl: "Nie liczy się perfekcja, liczy się konsekwencja.",
+    en: "It's not about perfection, it's about consistency.",
+    es: "No se trata de perfección, se trata de consistencia."
+  },
+  {
+    pl: "Każdy dzień to nowa szansa na bycie lepszą wersją siebie.",
+    en: "Every day is a new chance to be a better version of yourself.",
+    es: "Cada día es una nueva oportunidad para ser mejor."
+  },
+  {
+    pl: "Nawyki budują przyszłość, którą sobie wymarzyłeś.",
+    en: "Habits build the future you dreamed of.",
+    es: "Los hábitos construyen el futuro que soñaste."
+  },
+  {
+    pl: "Mała zmiana dziś = wielka różnica jutro.",
+    en: "Small change today = big difference tomorrow.",
+    es: "Pequeño cambio hoy = gran diferencia mañana."
+  },
+  {
+    pl: "Nie rezygnuj! Jesteś bliżej niż myślisz.",
+    en: "Don't give up! You're closer than you think.",
+    es: "¡No te rindas! Estás más cerca de lo que crees."
+  },
+  {
+    pl: "Twoja przyszłość jest tworzona przez to, co robisz dzisiaj.",
+    en: "Your future is created by what you do today.",
+    es: "Tu futuro se crea por lo que haces hoy."
+  },
+  {
+    pl: "Motywacja Cię uruchamia. Nawyk Cię prowadzi.",
+    en: "Motivation gets you started. Habit keeps you going.",
+    es: "La motivación te pone en marcha. El hábito te mantiene."
+  },
+  {
+    pl: "Bądź silniejszy niż twoje wymówki.",
+    en: "Be stronger than your excuses.",
+    es: "Sé más fuerte que tus excusas."
+  },
+  {
+    pl: "Dzisiaj jest dobry dzień, żeby być produktywnym!",
+    en: "Today is a good day to be productive!",
+    es: "¡Hoy es un buen día para ser productivo!"
+  }
 ];
+
+let currentQuoteIndex=0;
+let currentQuoteLang='pl';
 
 function showToast(text,actionText,actionCallback){
   const toast=document.getElementById("toast");
@@ -572,13 +635,33 @@ function showToast(text,actionText,actionCallback){
 }
 
 function getRandomQuote(){
-  const customQuotes=JSON.parse(localStorage.getItem("customQuotes")||"[]");
-  const allQuotes=[...defaultQuotes,...customQuotes];
-  return allQuotes[Math.floor(Math.random()*allQuotes.length)];
+  currentQuoteIndex=Math.floor(Math.random()*defaultQuotes.length);
+  return defaultQuotes[currentQuoteIndex][currentQuoteLang];
 }
 
 function updateQuote(){
-  document.getElementById("quoteText").textContent=getRandomQuote();
+  const quote=getRandomQuote();
+  document.getElementById("quoteText").textContent=quote;
+  updateLangFlags();
+}
+
+function updateLangFlags(){
+  document.querySelectorAll('.lang-flag').forEach(btn=>{
+    if(btn.dataset.lang===currentQuoteLang){
+      btn.style.opacity='1';
+      btn.style.transform='scale(1.1)';
+    }else{
+      btn.style.opacity='0.5';
+      btn.style.transform='scale(1)';
+    }
+  });
+}
+
+function switchQuoteLang(lang){
+  currentQuoteLang=lang;
+  localStorage.setItem('quoteLang',lang);
+  document.getElementById("quoteText").textContent=defaultQuotes[currentQuoteIndex][lang];
+  updateLangFlags();
 }
 
 function today(){
@@ -821,13 +904,13 @@ function render(){
         <div class="drag-handle" draggable="true" style="cursor:move;padding:4px;margin:-16px -16px 8px -16px;background:var(--bg-tertiary);border-radius:14px 14px 0 0;text-align:center;color:var(--text-secondary);font-size:20px">⋮⋮</div>
         <span class="category-badge cat-${h.category||'other'}">${getCategoryLabel(h.category||'other')}</span>
         <div class="habit-header">
-          <div>
+          <div class="habit-info">
             <div class="name">${h.name}</div>
             <div class="streak" id="streak-${i}">${streakEmoji} ${h.streak}</div>
           </div>
           <div class="actions">
-            <button class="done">Zrobione dziś</button>
-            <button class="freeze">${h.freeze?"Odmróź":"Freeze"}</button>
+            <button class="done">✓ Zrobione</button>
+            <button class="freeze">${h.freeze?"❄️ Odmróź":"❄️ Freeze"}</button>
             <button class="more">⋯</button>
           </div>
         </div>
@@ -1042,6 +1125,18 @@ streakEmojiModal.onclick=(e)=>{
 // Quote refresh
 document.getElementById("quoteRefresh").onclick=updateQuote;
 
+// Language flags
+document.querySelectorAll('.lang-flag').forEach(btn=>{
+  btn.onclick=(e)=>{
+    e.stopPropagation();
+    switchQuoteLang(btn.dataset.lang);
+  };
+});
+
+// Restore saved language
+const savedLang=localStorage.getItem('quoteLang');
+if(savedLang) currentQuoteLang=savedLang;
+
 // Category stats toggle
 document.getElementById("categoryStatsToggle").onclick=()=>{
   const list=document.getElementById("categoryStatsList");
@@ -1091,6 +1186,8 @@ settingsBtn.onclick=()=>{
   quotesModal.classList.add("show");
   const customQuotes=JSON.parse(localStorage.getItem("customQuotes")||"[]");
   document.getElementById("customQuotes").value=customQuotes.join("\n");
+  const savedLang=localStorage.getItem("quoteLanguage")||"pl";
+  document.getElementById("quoteLanguage").value=savedLang;
 };
 document.querySelector(".header").append(settingsBtn);
 
@@ -1104,7 +1201,9 @@ document.getElementById("cancelQuotesBtn").onclick=()=>{
 document.getElementById("saveQuotesBtn").onclick=()=>{
   const text=document.getElementById("customQuotes").value;
   const quotes=text.split("\n").map(q=>q.trim()).filter(q=>q);
+  const language=document.getElementById("quoteLanguage").value;
   localStorage.setItem("customQuotes",JSON.stringify(quotes));
+  localStorage.setItem("quoteLanguage",language);
   quotesModal.classList.remove("show");
   updateQuote();
   showToast("Cytaty zapisane! 💾");
@@ -1201,5 +1300,3 @@ render();
 </script>
 </body>
 </html>
-
-
