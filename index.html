@@ -76,15 +76,31 @@ h1{margin:6px 0 2px;color:#3b82f6}
 
 .calendar-container{margin-top:8px;position:relative}
 .calendar{
-  display:flex;flex-wrap:wrap;
   max-height:0;opacity:0;overflow:hidden;
   transition:.35s;pointer-events:none;
-  position:relative
 }
 .calendar.show{max-height:400px;opacity:1;pointer-events:auto}
 
 .calendar.editing{
   outline:2px dashed #f97316
+}
+
+.calendar-nav{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:8px;
+  gap:12px;
+}
+.calendar-nav span{
+  color:white;font-weight:bold;
+  flex:1;text-align:center;
+}
+.calendar-nav button{
+  background:#1e293b;color:white;border:none;padding:6px 12px;border-radius:4px;
+  cursor:pointer;flex-shrink:0;
+}
+
+.calendar-days{
+  display:flex;flex-wrap:wrap;
 }
 
 .day{
@@ -99,22 +115,6 @@ h1{margin:6px 0 2px;color:#3b82f6}
 .day.freeze{background:#facc15;color:black}
 .day.missed{background:#ef4444;color:white}
 .day.locked{opacity:.35}
-
-.calendar-nav{
-  display:flex;justify-content:center;align-items:center;
-  margin-top:4px;
-  position:relative;
-}
-.calendar-nav span{
-  color:white;font-weight:bold;margin:0 40px;
-}
-.calendar-nav button{
-  position:absolute;top:0;
-  background:#1e293b;color:white;border:none;padding:4px 10px;border-radius:4px;
-  cursor:pointer;
-}
-.calendar-nav .prev{left:0;}
-.calendar-nav .next{right:0;}
 
 .add{
   position:fixed;bottom:24px;right:24px;
@@ -194,10 +194,31 @@ function renderCalendar(h){
 
   const ref=new Date();
   ref.setMonth(ref.getMonth()+h.monthOffset);
+  
+  // Nawigacja miesiąca na górze
+  const nav=document.createElement("div");
+  nav.className="calendar-nav";
+  const l=document.createElement("button");
+  l.textContent="<";
+  const r=document.createElement("button");
+  r.textContent=">";
+  const title=document.createElement("span");
+  title.textContent=ref.toLocaleString("pl-PL",{month:"long",year:"numeric"});
+
+  nav.append(l,title,r);
+  cal.append(nav);
+
+  l.onclick=(e)=>{e.stopPropagation(); h.monthOffset--; save(); render();}
+  r.onclick=(e)=>{e.stopPropagation(); h.monthOffset++; save(); render();}
+
+  // Dni kalendarza
+  const daysContainer=document.createElement("div");
+  daysContainer.className="calendar-days";
+
   const first=(new Date(ref.getFullYear(),ref.getMonth(),1).getDay()+6)%7;
   const daysInMonth=new Date(ref.getFullYear(),ref.getMonth()+1,0).getDate();
 
-  for(let i=0;i<first;i++) cal.append(document.createElement("div"));
+  for(let i=0;i<first;i++) daysContainer.append(document.createElement("div"));
   for(let d=1;d<=daysInMonth;d++){
     const date=new Date(ref.getFullYear(),ref.getMonth(),d);
     const ds=new Date(date.getTime()-date.getTimezoneOffset()*60000).toISOString().slice(0,10);
@@ -222,25 +243,10 @@ function renderCalendar(h){
       save(); render();
     };
 
-    cal.append(div);
+    daysContainer.append(div);
   }
 
-  // Nawigacja miesiąca pod dniami
-  const nav=document.createElement("div");
-  nav.className="calendar-nav";
-  const l=document.createElement("button");
-  l.textContent="<"; l.className="prev";
-  const r=document.createElement("button");
-  r.textContent=">"; r.className="next";
-  const title=document.createElement("span");
-  title.textContent=ref.toLocaleString("pl-PL",{month:"long",year:"numeric"});
-
-  nav.append(l,title,r);
-  cal.append(nav);
-
-  l.onclick=(e)=>{e.stopPropagation(); h.monthOffset--; save(); render();}
-  r.onclick=(e)=>{e.stopPropagation(); h.monthOffset++; save(); render();}
-
+  cal.append(daysContainer);
   cont.append(cal);
   return {cont,cal};
 }
