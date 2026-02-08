@@ -1,323 +1,334 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Keppy – keep going</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keepy – Keep Going</title>
+<link rel="icon.png" href="icon.png">
 
 <style>
-:root {
-  --bg: #0f1220;
-  --card: rgba(255,255,255,0.08);
-  --text: #fff;
-  --muted: #aaa;
-  --blue: #5aa9ff;
-  --green: #4ade80;
-  --red: #f87171;
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
+  background:#0f172a;color:white;margin:0;padding:16px;
+}
+.header{text-align:center;margin-bottom:12px}
+.mascot{width:220px;height:220px;border-radius:50%;object-fit:cover}
+h1{margin:8px 0 4px;color:#3b82f6}
+.motto{color:#94a3b8;font-size:14px}
+
+#stats{
+  display:flex;justify-content:space-around;
+  background:rgba(255,255,255,0.05);
+  padding:12px;border-radius:14px;margin-bottom:14px;
+}
+#stats div{text-align:center}
+#stats div div:first-child{font-size:13px;color:#94a3b8}
+#stats div div:last-child{font-size:18px;font-weight:bold}
+
+.habit{
+  background:rgba(255,255,255,0.05);
+  padding:16px;border-radius:14px;margin-bottom:12px;
+  opacity:0;transform:translateY(20px);
+  transition:.25s;position:relative
+}
+.habit.show{opacity:1;transform:none}
+
+.habit.ice::after{
+  content:"";position:absolute;inset:0;
+  background:#3b82f6;opacity:0;border-radius:14px;
+  animation:ice .8s
+}
+@keyframes ice{30%,60%{opacity:.6}100%{opacity:0}}
+
+.habit-header{
+  display:flex;justify-content:space-between;align-items:center
+}
+.name{font-size:18px}
+.streak{font-size:20px;color:#ff9500}
+
+.actions{
+  display:flex;align-items:center;gap:6px
+}
+.actions button{
+  padding:6px 10px;border:none;border-radius:8px
+}
+.done{background:#22c55e}
+.freeze{background:#facc15}
+.more{
+  background:#1e293b;color:white;font-size:18px
 }
 
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont;
-  background: radial-gradient(circle at top, #1b1f3a, var(--bg));
-  color: var(--text);
+/* MENU 3 KROPKI */
+.menu{
+  position:absolute;right:12px;top:48px;
+  background:#020617;border-radius:10px;
+  overflow:hidden;display:none;
+  box-shadow:0 10px 30px rgba(0,0,0,.5)
+}
+.menu button{
+  width:100%;padding:10px 14px;
+  background:none;border:none;color:white;
+  text-align:left
+}
+.menu button:hover{background:rgba(255,255,255,.08)}
+
+.toggle-cal,.edit-cal{
+  width:100%;margin-top:8px;
+  padding:8px;border:none;border-radius:8px;
+  background:#3b82f6;color:white
+}
+.edit-cal.active{background:#f97316}
+
+.calendar-container{margin-top:8px}
+.calendar-header{
+  display:flex;justify-content:space-between;
+  align-items:center;margin-bottom:4px;
+  visibility:hidden
+}
+.calendar-header button{
+  background:#1e293b;color:white;border:none;
+  border-radius:4px;padding:4px 10px
 }
 
-.app {
-  max-width: 420px;
-  margin: auto;
-  padding: 16px;
+.calendar{
+  display:flex;flex-wrap:wrap;
+  max-height:0;opacity:0;overflow:hidden;
+  transition:.35s;pointer-events:none
+}
+.calendar.show{
+  max-height:400px;opacity:1
+}
+.calendar.show ~ .calendar-header{
+  visibility:visible
+}
+.calendar.editing{
+  pointer-events:auto;
+  outline:2px dashed #f97316
 }
 
-/* HEADER */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.day{
+  width:14.2%;height:28px;
+  line-height:28px;text-align:center;
+  font-size:12px;border-radius:6px;
+  background:#111827
 }
-.title {
-  font-size: 28px;
-  font-weight: 700;
-}
-.menu {
-  font-size: 26px;
-  cursor: pointer;
-}
+.calendar.editing .day{cursor:pointer}
 
-/* DROPDOWN */
-.dropdown {
-  position: absolute;
-  right: 16px;
-  top: 60px;
-  background: #11142a;
-  border-radius: 12px;
-  overflow: hidden;
-  display: none;
-  box-shadow: 0 20px 40px rgba(0,0,0,.4);
-}
-.dropdown button {
-  display: block;
-  width: 100%;
-  background: none;
-  border: none;
-  color: white;
-  padding: 14px 20px;
-  text-align: left;
-  cursor: pointer;
-}
-.dropdown button:hover {
-  background: rgba(255,255,255,0.08);
-}
+.day.done{background:#22c55e;color:black}
+.day.freeze{background:#facc15;color:black}
+.day.missed{background:#ef4444}
+.day.locked{opacity:.35}
 
-/* ACTIONS */
-.actions {
-  display: flex;
-  gap: 12px;
-  margin: 20px 0;
-}
-.actions button {
-  flex: 1;
-  padding: 14px;
-  border-radius: 14px;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-}
-.done { background: var(--green); }
-.freeze { background: var(--blue); }
-.unfreeze { background: var(--red); }
-
-/* CALENDAR */
-.calendar-container {
-  margin-top: 20px;
-}
-.calendar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.calendar-header button {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 22px;
-  cursor: pointer;
-}
-.month {
-  font-weight: 600;
-}
-.calendar {
-  margin-top: 10px;
-  display: grid;
-  grid-template-columns: repeat(7,1fr);
-  gap: 6px;
-}
-.day {
-  aspect-ratio: 1/1;
-  border-radius: 10px;
-  background: var(--card);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-}
-.day.done { background: var(--green); }
-.day.freeze { background: var(--blue); }
-.day.disabled { opacity: .3; }
-
-/* CLOCK */
-.clock {
-  text-align: center;
-  margin-top: 24px;
-}
-.clock .time {
-  font-size: 26px;
-  font-weight: 700;
-}
-
-/* STATS */
-.stats {
-  margin-top: 16px;
-  background: var(--card);
-  border-radius: 16px;
-  padding: 16px;
-}
-.stat {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-.stat span:last-child {
-  font-weight: 600;
+.add{
+  position:fixed;bottom:24px;right:24px;
+  width:56px;height:56px;border-radius:50%;
+  background:#22c55e;font-size:32px;border:none
 }
 </style>
 </head>
-
 <body>
-<div class="app">
 
-  <div class="header">
-    <div class="title">Keppy</div>
-    <div class="menu" id="menuBtn">⋯</div>
-  </div>
-
-  <div class="dropdown" id="dropdown">
-    <button id="editBtn">Tryb edycji kalendarza</button>
-    <button id="deleteBtn">Usuń passę</button>
-  </div>
-
-  <div class="actions">
-    <button class="done" id="doneBtn">Zrobione dziś</button>
-    <button class="freeze" id="freezeBtn">Zamróź</button>
-    <button class="unfreeze" id="unfreezeBtn">Odmróź</button>
-  </div>
-
-  <div class="calendar-container">
-    <div class="calendar-header">
-      <button id="prev">‹</button>
-      <div class="month" id="monthLabel"></div>
-      <button id="next">›</button>
-    </div>
-    <div class="calendar" id="calendar"></div>
-  </div>
-
-  <div class="clock">
-    <div>Do północy pozostało</div>
-    <div class="time" id="clock"></div>
-  </div>
-
-  <div class="stats">
-    <div class="stat"><span>Aktualna passa</span><span id="currentStreak">0</span></div>
-    <div class="stat"><span>Najdłuższa passa</span><span id="bestStreak">0</span></div>
-    <div class="stat"><span>Średnia dzienna</span><span id="avg">0</span></div>
-  </div>
-
+<div class="header">
+  <img src="bro" class="mascot">
+  <h1>Keepy</h1>
+  <p class="motto">Keep Going</p>
 </div>
 
+<div id="stats">
+  <div><div>Dni wykonane</div><div id="totalDone">0</div></div>
+  <div><div>Najdłuższa passa</div><div id="maxStreak">0</div></div>
+  <div><div>Średnia dzienna</div><div id="avgDaily">0</div></div>
+</div>
+
+<div id="list"></div>
+<button class="add" id="addBtn">+</button>
+
 <script>
-/* ===== DATE FIX (LOCAL) ===== */
-function today() {
-  const d = new Date();
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+const list=document.getElementById("list");
+const DAY=86400000;
+
+/* LOKALNA DATA */
+function today(){
+  const d=new Date();
+  d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
   return d.toISOString().slice(0,10);
 }
 
-/* ===== STATE ===== */
-let data = JSON.parse(localStorage.getItem('keppy')) || {};
-let editMode = false;
-let view = new Date();
+let habits=JSON.parse(localStorage.getItem("keepy"))||[];
+const save=()=>localStorage.setItem("keepy",JSON.stringify(habits));
 
-/* ===== MENU ===== */
-menuBtn.onclick = () => dropdown.style.display =
-  dropdown.style.display === 'block' ? 'none' : 'block';
-
-editBtn.onclick = () => {
-  editMode = !editMode;
-  alert(editMode ? 'Tryb edycji ON (7 dni wstecz)' : 'Tryb edycji OFF');
-  dropdown.style.display = 'none';
-};
-
-deleteBtn.onclick = () => {
-  if (confirm('Usunąć całą passę?')) {
-    data = {};
-    save();
-  }
-};
-
-/* ===== ACTIONS ===== */
-doneBtn.onclick = () => mark(today(), 'done');
-freezeBtn.onclick = () => mark(today(), 'freeze');
-unfreezeBtn.onclick = () => mark(today(), null);
-
-/* ===== MARK ===== */
-function mark(date, status) {
-  data[date] = status;
-  save();
-}
-
-/* ===== CALENDAR ===== */
-prev.onclick = () => { view.setMonth(view.getMonth()-1); render(); };
-next.onclick = () => { view.setMonth(view.getMonth()+1); render(); };
-
-function render() {
-  calendar.innerHTML = '';
-  monthLabel.textContent = view.toLocaleString('pl',{month:'long',year:'numeric'});
-
-  const y = view.getFullYear();
-  const m = view.getMonth();
-  const days = new Date(y, m+1, 0).getDate();
-
-  for(let d=1; d<=days; d++){
-    const date = new Date(y,m,d);
-    const key = date.toISOString().slice(0,10);
-    const div = document.createElement('div');
-    div.className = 'day';
-    div.textContent = d;
-
-    if(data[key]) div.classList.add(data[key]);
-
-    const diff = (new Date(today()) - date) / 86400000;
-    if(editMode && diff <= 7 && diff >= 0){
-      div.onclick = () => {
-        const s = prompt('done / freeze / puste');
-        data[key] = s || null;
-        save();
-      };
-    } else if(editMode) {
-      div.classList.add('disabled');
-    }
-
-    calendar.appendChild(div);
-  }
-}
-
-/* ===== STATS ===== */
-function stats() {
-  let streak = 0, best = 0, total = 0, days = 0;
-  const keys = Object.keys(data).sort();
-  let prev = null;
-
-  keys.forEach(k=>{
-    if(data[k]==='done'){
-      total++; days++;
-      if(prev && (new Date(k)-new Date(prev))===86400000){
-        streak++;
-      } else {
-        streak=1;
-      }
-      best = Math.max(best, streak);
-      prev = k;
-    }
+function updateStats(){
+  let total=0,max=0,dates={};
+  habits.forEach(h=>{
+    h.datesDone.forEach(d=>{
+      total++;dates[d]=(dates[d]||0)+1;
+    });
+    if(h.streak>max)max=h.streak;
   });
-
-  currentStreak.textContent = streak;
-  bestStreak.textContent = best;
-  avg.textContent = days ? (total/days).toFixed(2) : 0;
+  const days=Object.keys(dates).length||1;
+  totalDone.textContent=total;
+  maxStreak.textContent=max;
+  avgDaily.textContent=(total/days).toFixed(2);
 }
 
-/* ===== CLOCK ===== */
-function clockTick(){
-  const now = new Date();
-  const midnight = new Date();
-  midnight.setHours(24,0,0,0);
-  const diff = midnight-now;
-  const h = String(Math.floor(diff/3600000)).padStart(2,'0');
-  const m = String(Math.floor(diff%3600000/60000)).padStart(2,'0');
-  const s = String(Math.floor(diff%60000/1000)).padStart(2,'0');
-  clock.textContent = `${h}:${m}:${s}`;
+function renderCalendar(h){
+  h.monthOffset??=0;
+  const cont=document.createElement("div");
+  cont.className="calendar-container";
+
+  const cal=document.createElement("div");
+  cal.className="calendar";
+
+  const header=document.createElement("div");
+  header.className="calendar-header";
+
+  const l=document.createElement("button");
+  const r=document.createElement("button");
+  l.textContent="<"; r.textContent=">";
+
+  const ref=new Date();
+  ref.setMonth(ref.getMonth()+h.monthOffset);
+
+  const title=document.createElement("span");
+  title.textContent=ref.toLocaleString("pl-PL",{month:"long",year:"numeric"});
+
+  header.append(l,title,r);
+
+  const first=(new Date(ref.getFullYear(),ref.getMonth(),1).getDay()+6)%7;
+  const days=new Date(ref.getFullYear(),ref.getMonth()+1,0).getDate();
+
+  for(let i=0;i<first;i++)cal.append(document.createElement("div"));
+
+  for(let d=1;d<=days;d++){
+    const date=new Date(ref.getFullYear(),ref.getMonth(),d);
+    const ds=new Date(date.getTime()-date.getTimezoneOffset()*60000)
+      .toISOString().slice(0,10);
+
+    const diff=(new Date(today())-new Date(ds))/DAY;
+    const editable=diff>=0 && diff<=7;
+
+    const div=document.createElement("div");
+    div.className="day";
+    div.textContent=d;
+
+    if(h.datesDone.includes(ds))div.classList.add("done");
+    else if(h.freezeDates.includes(ds))div.classList.add("freeze");
+    else if(diff>0)div.classList.add("missed");
+
+    if(!editable)div.classList.add("locked");
+
+    div.onclick=()=>{
+      if(!cal.classList.contains("editing"))return;
+      if(!editable)return;
+
+      if(h.datesDone.includes(ds)){
+        h.datesDone=h.datesDone.filter(x=>x!==ds);
+        h.freezeDates.push(ds);
+      }else if(h.freezeDates.includes(ds)){
+        h.freezeDates=h.freezeDates.filter(x=>x!==ds);
+      }else{
+        h.datesDone.push(ds);
+      }
+      save();render();
+    };
+
+    cal.append(div);
+  }
+
+  l.onclick=()=>{h.monthOffset--;save();render()};
+  r.onclick=()=>{h.monthOffset++;save();render()};
+
+  cont.append(cal,header);
+  return {cont,cal};
 }
 
-/* ===== SAVE ===== */
-function save(){
-  localStorage.setItem('keppy', JSON.stringify(data));
-  render();
-  stats();
+function render(){
+  list.innerHTML="";
+  habits.forEach((h,i)=>{
+    const div=document.createElement("div");
+    div.className="habit";
+
+    div.innerHTML=`
+      <div class="habit-header">
+        <div>
+          <div class="name">${h.name}</div>
+          <div class="streak">🔥 ${h.streak}</div>
+        </div>
+        <div class="actions">
+          <button class="done">Zrobione dziś</button>
+          <button class="freeze">${h.freeze?"Odmróź":"Freeze"}</button>
+          <button class="more">⋯</button>
+        </div>
+      </div>
+      <div class="menu">
+        <button class="editHist">✏️ Edytuj historię</button>
+        <button class="deleteHist">🗑 Usuń passę</button>
+      </div>
+    `;
+
+    const menu=div.querySelector(".menu");
+    const more=div.querySelector(".more");
+
+    more.onclick=()=>{
+      menu.style.display=menu.style.display==="block"?"none":"block";
+    };
+
+    const {cont,cal}=renderCalendar(h);
+
+    div.querySelector(".editHist").onclick=()=>{
+      cal.classList.toggle("editing");
+      menu.style.display="none";
+    };
+
+    div.querySelector(".deleteHist").onclick=()=>{
+      if(confirm("Usunąć passę?")){
+        habits.splice(i,1);save();render();
+      }
+    };
+
+    div.querySelector(".done").onclick=()=>{
+      if(h.freeze)return;
+      if(!h.datesDone.includes(today())){
+        h.datesDone.push(today());
+        h.streak++;
+        save();render();
+      }
+    };
+
+    div.querySelector(".freeze").onclick=()=>{
+      h.freeze=!h.freeze;
+      if(h.freeze && !h.freezeDates.includes(today()))
+        h.freezeDates.push(today());
+      if(!h.freeze)
+        h.freezeDates=h.freezeDates.filter(d=>d!==today());
+      div.classList.add("ice");
+      setTimeout(()=>div.classList.remove("ice"),800);
+      save();render();
+    };
+
+    div.append(cont);
+    list.append(div);
+    setTimeout(()=>div.classList.add("show"),10);
+  });
+  updateStats();
 }
 
-setInterval(clockTick,1000);
+document.getElementById("addBtn").onclick=()=>{
+  const n=prompt("Nazwa passy:");
+  if(n){
+    habits.push({
+      name:n,
+      streak:0,
+      datesDone:[],
+      freezeDates:[],
+      freeze:false,
+      monthOffset:0
+    });
+    save();render();
+  }
+};
+
 render();
-stats();
-clockTick();
 </script>
 </body>
 </html>
