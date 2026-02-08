@@ -11,10 +11,17 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
   background:#0f172a;color:white;margin:0;padding:16px;
 }
-.header{text-align:center;margin-bottom:12px}
-.mascot{width:220px;height:220px;border-radius:50%;object-fit:cover}
-h1{margin:8px 0 4px;color:#3b82f6}
+.header{text-align:center;margin-bottom:10px}
+.mascot{width:200px;height:200px;border-radius:50%;object-fit:cover}
+h1{margin:6px 0 2px;color:#3b82f6}
 .motto{color:#94a3b8;font-size:14px}
+
+#countdown{
+  font-size:18px;
+  font-weight:600;
+  color:#e5e7eb;
+  margin:6px 0 14px;
+}
 
 #stats{
   display:flex;justify-content:space-around;
@@ -46,9 +53,7 @@ h1{margin:8px 0 4px;color:#3b82f6}
 .name{font-size:18px}
 .streak{font-size:20px;color:#ff9500}
 
-.actions{
-  display:flex;align-items:center;gap:6px
-}
+.actions{display:flex;gap:6px}
 .actions button{
   padding:6px 10px;border:none;border-radius:8px
 }
@@ -79,7 +84,6 @@ h1{margin:8px 0 4px;color:#3b82f6}
 .calendar-header{
   display:flex;justify-content:space-between;
   align-items:center;margin-bottom:4px;
-  visibility:hidden
 }
 .calendar-header button{
   background:#1e293b;color:white;border:none;
@@ -91,12 +95,7 @@ h1{margin:8px 0 4px;color:#3b82f6}
   max-height:0;opacity:0;overflow:hidden;
   transition:.35s;pointer-events:none
 }
-.calendar.show{
-  max-height:400px;opacity:1
-}
-.calendar.show ~ .calendar-header{
-  visibility:visible
-}
+.calendar.show{max-height:400px;opacity:1}
 .calendar.editing{
   pointer-events:auto;
   outline:2px dashed #f97316
@@ -128,6 +127,7 @@ h1{margin:8px 0 4px;color:#3b82f6}
   <img src="bro.jpg" class="mascot">
   <h1>Keepy</h1>
   <p class="motto">Keep Going</p>
+  <div id="countdown">--:--:-- do północy</div>
 </div>
 
 <div id="stats">
@@ -140,14 +140,30 @@ h1{margin:8px 0 4px;color:#3b82f6}
 <button class="add" id="addBtn">+</button>
 
 <script>
-const list=document.getElementById("list");
 const DAY=86400000;
+const list=document.getElementById("list");
 
 function today(){
   const d=new Date();
   d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
   return d.toISOString().slice(0,10);
 }
+
+/* ⏱️ ZEGAR DO PÓŁNOCY */
+function startCountdown(){
+  const el=document.getElementById("countdown");
+  setInterval(()=>{
+    const now=new Date();
+    const midnight=new Date();
+    midnight.setHours(24,0,0,0);
+    const diff=midnight-now;
+    const h=String(Math.floor(diff/3600000)).padStart(2,"0");
+    const m=String(Math.floor(diff%3600000/60000)).padStart(2,"0");
+    const s=String(Math.floor(diff%60000/1000)).padStart(2,"0");
+    el.textContent=`${h}:${m}:${s} do północy`;
+  },1000);
+}
+startCountdown();
 
 let habits=JSON.parse(localStorage.getItem("keepy"))||[];
 const save=()=>localStorage.setItem("keepy",JSON.stringify(habits));
@@ -167,12 +183,13 @@ function updateStats(){
 }
 
 function renderCalendar(h){
-  h.monthOffset??=0;
   const cont=document.createElement("div");
   cont.className="calendar-container";
 
   const cal=document.createElement("div");
   cal.className="calendar";
+  if(h.calendarOpen) cal.classList.add("show");
+  if(h.editing) cal.classList.add("editing");
 
   const header=document.createElement("div");
   header.className="calendar-header";
@@ -213,17 +230,11 @@ function renderCalendar(h){
     if(!editable)div.classList.add("locked");
 
     div.onclick=()=>{
-      if(!cal.classList.contains("editing"))return;
-      if(!editable)return;
-
-      if(h.datesDone.includes(ds)){
+      if(!h.editing || !editable)return;
+      if(h.datesDone.includes(ds))
         h.datesDone=h.datesDone.filter(x=>x!==ds);
-        h.freezeDates.push(ds);
-      }else if(h.freezeDates.includes(ds)){
-        h.freezeDates=h.freezeDates.filter(x=>x!==ds);
-      }else{
+      else
         h.datesDone.push(ds);
-      }
       save();render();
     };
 
@@ -268,19 +279,19 @@ function render(){
 
     const toggle=document.createElement("button");
     toggle.className="toggle-cal";
-    toggle.textContent="📅 Pokaż kalendarz";
+    toggle.textContent=h.calendarOpen?"📅 Ukryj kalendarz":"📅 Pokaż kalendarz";
 
     const {cont,cal}=renderCalendar(h);
 
     toggle.onclick=()=>{
-      cal.classList.toggle("show");
-      toggle.textContent=cal.classList.contains("show")
-        ?"📅 Ukryj kalendarz":"📅 Pokaż kalendarz";
+      h.calendarOpen=!h.calendarOpen;
+      save();render();
     };
 
     div.querySelector(".editHist").onclick=()=>{
-      cal.classList.toggle("editing");
+      h.editing=!h.editing;
       menu.style.display="none";
+      save();render();
     };
 
     div.querySelector(".deleteHist").onclick=()=>{
@@ -300,10 +311,6 @@ function render(){
 
     div.querySelector(".freeze").onclick=()=>{
       h.freeze=!h.freeze;
-      if(h.freeze && !h.freezeDates.includes(today()))
-        h.freezeDates.push(today());
-      if(!h.freeze)
-        h.freezeDates=h.freezeDates.filter(d=>d!==today());
       div.classList.add("ice");
       setTimeout(()=>div.classList.remove("ice"),800);
       save();render();
@@ -325,7 +332,9 @@ document.getElementById("addBtn").onclick=()=>{
       datesDone:[],
       freezeDates:[],
       freeze:false,
-      monthOffset:0
+      monthOffset:0,
+      calendarOpen:false,
+      editing:false
     });
     save();render();
   }
