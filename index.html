@@ -217,6 +217,14 @@ h1{margin:6px 0 2px;color:var(--accent)}
   font-size:12px;font-weight:600;
   margin-bottom:8px;
 }
+.frequency-badge{
+  display:inline-block;
+  padding:4px 10px;border-radius:10px;
+  font-size:11px;font-weight:600;
+  margin-left:6px;
+  background:var(--bg-tertiary);
+  color:var(--text-secondary);
+}
 .cat-sport{background:#3b82f6;color:white}
 .cat-health{background:#22c55e;color:white}
 .cat-work{background:#f59e0b;color:white}
@@ -362,6 +370,54 @@ h1{margin:6px 0 2px;color:var(--accent)}
 .menu button.danger:active{
   background:rgba(255,69,58,0.15);
 }
+.submenu{
+  position:absolute;
+  right:12px;
+  top:52px;
+  background:rgba(30,41,59,0.7);
+  backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  border-radius:16px;
+  overflow:hidden;
+  display:none;
+  box-shadow:0 10px 40px rgba(0,0,0,.5), 0 0 0 0.5px rgba(255,255,255,0.1) inset;
+  z-index:100;
+  border:1px solid rgba(255,255,255,0.1);
+  min-width:220px;
+}
+[data-theme="light"] .submenu{
+  background:rgba(248,250,252,0.8);
+  border:1px solid rgba(0,0,0,0.1);
+}
+.submenu button{
+  width:100%;
+  padding:14px 16px;
+  background:none;
+  border:none;
+  color:var(--text-primary);
+  text-align:left;
+  cursor:pointer;
+  font-size:15px;
+  min-height:48px;
+  transition:background .2s;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  border-bottom:0.5px solid rgba(255,255,255,0.08);
+}
+[data-theme="light"] .submenu button{
+  border-bottom:0.5px solid rgba(0,0,0,0.06);
+}
+.submenu button:last-child{
+  border-bottom:none;
+}
+.submenu button:active{
+  background:rgba(255,255,255,0.1);
+  transform:scale(0.98);
+}
+[data-theme="light"] .submenu button:active{
+  background:rgba(0,0,0,0.05);
+}
 
 .toggle-cal{
   width:100%;margin-top:8px;
@@ -428,6 +484,26 @@ h1{margin:6px 0 2px;color:var(--accent)}
   font-size:12px;border-radius:6px;
   background:var(--bg-tertiary);
   transition:transform .2s;
+  position:relative;
+}
+.day.today{
+  border:2px solid var(--accent);
+  box-shadow:0 0 0 2px rgba(59,130,246,0.3);
+}
+.day.week-done{
+  background:var(--success);
+  color:white;
+  opacity:0.6;
+}
+.day.week-freeze{
+  background:var(--warning);
+  color:black;
+  opacity:0.6;
+}
+.day.week-missed{
+  background:var(--danger);
+  color:white;
+  opacity:0.5;
 }
 .calendar.editing .day{cursor:pointer}
 .calendar.editing .day:active{
@@ -649,6 +725,10 @@ h1{margin:6px 0 2px;color:var(--accent)}
         <option value="custom">➕ Własna kategoria...</option>
       </select>
       <input type="text" id="customCategory" placeholder="Wpisz nazwę własnej kategorii" style="display:none">
+      <select id="habitFrequency">
+        <option value="daily">📅 Codziennie</option>
+        <option value="weekly">📆 Tygodniowo (min 1x w tygodniu)</option>
+      </select>
       <select id="habitFolder">
         <option value="">Bez folderu</option>
       </select>
@@ -996,6 +1076,38 @@ function today(){
   return d.toISOString().slice(0,10);
 }
 
+function getWeekStart(dateStr){
+  const d=new Date(dateStr);
+  const day=(d.getDay()+6)%7; // Monday = 0
+  const diff=d.getDate()-day;
+  const monday=new Date(d.setDate(diff));
+  monday.setMinutes(monday.getMinutes()-monday.getTimezoneOffset());
+  return monday.toISOString().slice(0,10);
+}
+
+function getWeekDays(weekStart){
+  const days=[];
+  const start=new Date(weekStart);
+  for(let i=0;i<7;i++){
+    const d=new Date(start);
+    d.setDate(start.getDate()+i);
+    d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
+    days.push(d.toISOString().slice(0,10));
+  }
+  return days;
+}
+
+function hasWeekDone(h,weekStart){
+  const weekDays=getWeekDays(weekStart);
+  return weekDays.some(day=>h.datesDone.includes(day));
+}
+
+function hasWeekFreeze(h,weekStart){
+  if(!h.freezeDates) return false;
+  const weekDays=getWeekDays(weekStart);
+  return weekDays.some(day=>h.freezeDates.includes(day));
+}
+
 function startCountdown(){
   const el=document.getElementById("countdown");
   setInterval(()=>{
@@ -1175,29 +1287,50 @@ function renderCalendar(h, habitIndex){
     const date=new Date(ref.getFullYear(),ref.getMonth(),d);
     const ds=new Date(date.getTime()-date.getTimezoneOffset()*60000).toISOString().slice(0,10);
     const diff=(new Date(today())-new Date(ds))/DAY;
-    const editable=diff>=0 && diff<=7;
+    const isWeekly=h.frequency==='weekly';
+    const editable=isWeekly?(diff>=0 && diff<=14):(diff>=0 && diff<=7);
+    const isToday=ds===today();
 
     const div=document.createElement("div");
     div.className="day";
     div.textContent=d;
+    
+    // Mark today
+    if(isToday) div.classList.add("today");
 
     // Initialize freezeDates if it doesn't exist
     if(!h.freezeDates) h.freezeDates=[];
 
-    // POPRAWKA: sprawdzamy czy dzień był zamrożony, ale później odmrożony
-    const wasFrozen=h.freezeDates.includes(ds);
-    const isDone=h.datesDone.includes(ds);
-    
-    if(wasFrozen && !h.freeze){
-      // był zamrożony ale już nie jest - szary
-      div.classList.add("unfrozen");
-    }else if(h.freeze && ds===today()){
-      // aktualnie zamrożony dzisiaj - żółty
-      div.classList.add("freeze");
-    }else if(isDone){
-      div.classList.add("done");
-    }else if(diff>0){
-      div.classList.add("missed");
+    if(isWeekly){
+      // Weekly mode - highlight whole week
+      const weekStart=getWeekStart(ds);
+      const isDoneThisWeek=hasWeekDone(h,weekStart);
+      const isFrozenThisWeek=hasWeekFreeze(h,weekStart);
+      const isPastWeek=diff>7;
+      
+      if(isFrozenThisWeek && !h.freeze){
+        div.classList.add("week-freeze");
+      }else if(h.freeze && weekStart===getWeekStart(today())){
+        div.classList.add("week-freeze");
+      }else if(isDoneThisWeek){
+        div.classList.add("week-done");
+      }else if(isPastWeek){
+        div.classList.add("week-missed");
+      }
+    }else{
+      // Daily mode - single day highlighting
+      const wasFrozen=h.freezeDates.includes(ds);
+      const isDone=h.datesDone.includes(ds);
+      
+      if(wasFrozen && !h.freeze){
+        div.classList.add("unfrozen");
+      }else if(h.freeze && ds===today()){
+        div.classList.add("freeze");
+      }else if(isDone){
+        div.classList.add("done");
+      }else if(diff>0){
+        div.classList.add("missed");
+      }
     }
     
     if(!editable) div.classList.add("locked");
@@ -1206,14 +1339,35 @@ function renderCalendar(h, habitIndex){
       e.preventDefault();
       e.stopPropagation();
       if(!h.editing || !editable) return;
-      if(h.datesDone.includes(ds)){
-        h.datesDone=h.datesDone.filter(x=>x!==ds);
-        div.classList.remove('done');
+      
+      if(isWeekly){
+        // Weekly mode - toggle whole week
+        const weekStart=getWeekStart(ds);
+        const weekDays=getWeekDays(weekStart);
+        const isDoneThisWeek=hasWeekDone(h,weekStart);
+        
+        if(isDoneThisWeek){
+          // Remove all days from this week
+          weekDays.forEach(day=>{
+            h.datesDone=h.datesDone.filter(x=>x!==day);
+          });
+        }else{
+          // Add first day of week that was clicked
+          if(!h.datesDone.includes(ds)){
+            h.datesDone.push(ds);
+          }
+        }
       }else{
-        h.datesDone.push(ds);
-        div.classList.add('done');
+        // Daily mode - toggle single day
+        if(h.datesDone.includes(ds)){
+          h.datesDone=h.datesDone.filter(x=>x!==ds);
+        }else{
+          h.datesDone.push(ds);
+        }
       }
+      
       save();
+      updateSingleCalendar(habitIndex);
       updateStats();
     };
 
@@ -1360,9 +1514,14 @@ function createHabitElement(h,i){
   
   const streakEmoji=h.streakEmoji||'🔥';
   const isDoneToday=h.datesDone.includes(today());
+  const frequency=h.frequency||'daily';
+  const frequencyLabel=frequency==='weekly'?'📆 Tyg.':'📅 Codz.';
 
   div.innerHTML=`
-    <span class="category-badge cat-${h.category||'other'}">${getCategoryLabel(h.category||'other')}</span>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span class="category-badge cat-${h.category||'other'}">${getCategoryLabel(h.category||'other')}</span>
+      <span class="frequency-badge">${frequencyLabel}</span>
+    </div>
     <div class="habit-header">
       <div class="habit-info">
         <div class="name">${h.name}</div>
@@ -1377,11 +1536,15 @@ function createHabitElement(h,i){
     <div class="menu">
       <button class="moveHabit">↕️ Przenieś passę</button>
       <button class="editHist">✏️ Edytuj historię</button>
-      <button class="renameHabit">✍️ Zmień nazwę</button>
-      <button class="changeCat">🏷️ Zmień kategorię</button>
-      <button class="changeEmoji">🔥 Zmień emoji</button>
+      <button class="customizeHabit">⚙️ Zmień... ▶</button>
       <button class="moveToFolder">📁 Przenieś do folderu</button>
       <button class="deleteHist danger">🗑 Usuń passę</button>
+    </div>
+    <div class="submenu">
+      <button class="renameHabit">✍️ Zmień nazwę</button>
+      <button class="changeCat">🏷️ Zmień kategorię</button>
+      <button class="changeFreq">📆 Zmień częstotliwość</button>
+      <button class="changeEmoji">🔥 Zmień emoji</button>
     </div>
     <div class="move-buttons" id="moveButtons-${i}">
       <button class="moveUp" ${i===0?'disabled':''}>⬆️ W górę</button>
@@ -1391,17 +1554,25 @@ function createHabitElement(h,i){
   `;
 
   const menu=div.querySelector(".menu");
+  const submenu=div.querySelector(".submenu");
   const moreBtn=div.querySelector(".more");
   const moveButtons=div.querySelector(".move-buttons");
   
   moreBtn.onclick=(e)=>{
     e.stopPropagation();
     document.querySelectorAll('.menu').forEach(m=>m.style.display='none');
+    document.querySelectorAll('.submenu').forEach(m=>m.style.display='none');
     document.querySelectorAll('.habit').forEach(h=>h.classList.remove('menu-open'));
     menu.style.display=menu.style.display==="block"?"none":"block";
     if(menu.style.display==="block"){
       div.classList.add('menu-open');
     }
+  };
+  
+  div.querySelector(".customizeHabit").onclick=(e)=>{
+    e.stopPropagation();
+    menu.style.display="none";
+    submenu.style.display="block";
   };
 
   const toggle=document.createElement("button");
@@ -1474,6 +1645,7 @@ function createHabitElement(h,i){
 
   div.querySelector(".renameHabit").onclick=()=>{
     menu.style.display="none";
+    submenu.style.display="none";
     const newName=prompt("Nowa nazwa passy:",h.name);
     if(newName && newName.trim()){
       h.name=newName.trim();
@@ -1484,6 +1656,7 @@ function createHabitElement(h,i){
 
   div.querySelector(".changeCat").onclick=()=>{
     menu.style.display="none";
+    submenu.style.display="none";
     const editCatModal=document.getElementById("editCategoryModal");
     editCatModal.classList.add("show");
     editCatModal.dataset.habitIndex=i;
@@ -1492,10 +1665,24 @@ function createHabitElement(h,i){
 
   div.querySelector(".changeEmoji").onclick=()=>{
     menu.style.display="none";
+    submenu.style.display="none";
     const emojiModal=document.getElementById("streakEmojiModal");
     emojiModal.classList.add("show");
     emojiModal.dataset.habitIndex=i;
     document.getElementById("streakEmoji").value=h.streakEmoji||'';
+  };
+  
+  div.querySelector(".changeFreq").onclick=()=>{
+    menu.style.display="none";
+    submenu.style.display="none";
+    const current=h.frequency||'daily';
+    const newFreq=current==='daily'?'weekly':'daily';
+    const label=newFreq==='weekly'?'tygodniowo':'codziennie';
+    if(confirm(`Zmienić częstotliwość na: ${label}?`)){
+      h.frequency=newFreq;
+      save();
+      render();
+    }
   };
   
   div.querySelector(".moveToFolder").onclick=()=>{
@@ -1685,6 +1872,7 @@ document.getElementById("saveBtn").onclick=()=>{
     const n=document.getElementById("habitName").value.trim();
     let c=document.getElementById("habitCategory").value;
     const folderId=document.getElementById("habitFolder").value;
+    const frequency=document.getElementById("habitFrequency").value;
     
     if(c==='custom'){
       const custom=document.getElementById("customCategory").value.trim();
@@ -1695,6 +1883,7 @@ document.getElementById("saveBtn").onclick=()=>{
       const newHabit={
         name:n,
         category:c,
+        frequency:frequency,
         streak:0,
         bestStreak:0,
         datesDone:[],
@@ -1855,8 +2044,9 @@ quotesModal.onclick=(e)=>{
 updateQuote();
 
 document.addEventListener('click',(e)=>{
-  if(!e.target.closest('.menu') && !e.target.closest('.more')){
+  if(!e.target.closest('.menu') && !e.target.closest('.submenu') && !e.target.closest('.more')){
     document.querySelectorAll('.menu').forEach(m=>m.style.display='none');
+    document.querySelectorAll('.submenu').forEach(m=>m.style.display='none');
     document.querySelectorAll('.habit').forEach(h=>h.classList.remove('menu-open'));
   }
 });
