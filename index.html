@@ -508,16 +508,35 @@ h1{margin:6px 0 2px;color:var(--accent)}
 }
 
 .calendar-days{
-  display:flex;flex-wrap:wrap;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.calendar-weekdays{
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  margin-bottom: 8px;
+}
+
+.calendar-weekday{
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 4px 0;
 }
 
 .day{
-  width:14.2%;height:32px;
-  line-height:32px;text-align:center;
-  font-size:12px;border-radius:6px;
-  background:var(--bg-tertiary);
-  transition:transform .2s;
-  position:relative;
+  width: 14.2%;
+  height: 32px;
+  line-height: 32px;
+  text-align: center;
+  font-size: 12px;
+  border-radius: 6px;
+  background: var(--bg-tertiary);
+  transition: transform .2s;
+  position: relative;
 }
 .day.today{
   border:2px solid var(--accent);
@@ -1493,6 +1512,18 @@ function renderCalendar(h, habitIndex){
     updateSingleCalendar(habitIndex);
   }
 
+  // Add weekday headers
+  const weekdaysContainer=document.createElement("div");
+  weekdaysContainer.className="calendar-weekdays";
+  const weekdayNames=['P','W','Ś','C','P','S','N'];
+  weekdayNames.forEach(name=>{
+    const day=document.createElement("div");
+    day.className="calendar-weekday";
+    day.textContent=name;
+    weekdaysContainer.append(day);
+  });
+  cal.append(weekdaysContainer);
+
   const daysContainer=document.createElement("div");
   daysContainer.className="calendar-days";
 
@@ -1507,7 +1538,7 @@ function renderCalendar(h, habitIndex){
     const isWeekly=h.frequency==='weekly';
     
     // For weekly: allow editing current week and past 2 weeks (up to 21 days back)
-    // For daily: allow editing last 7 days
+    // For daily: allow editing last 14 days (increased for better mobile UX)
     let editable;
     if(isWeekly){
       const weekStart=getWeekStart(ds);
@@ -1515,7 +1546,7 @@ function renderCalendar(h, habitIndex){
       const weekDiff=(new Date(currentWeekStart)-new Date(weekStart))/DAY/7;
       editable=(weekDiff<=2 && diff<=21);
     }else{
-      editable=(diff>=0 && diff<=7);
+      editable=(diff>=0 && diff<=14);
     }
     const isToday=ds===today();
 
@@ -2550,6 +2581,16 @@ editFolderModal.onclick=(e)=>{
 // Search functionality
 const searchInput=document.getElementById("searchInput");
 let searchTimeout;
+
+// Add focus/blur styling
+searchInput.onfocus=()=>{
+  searchInput.style.borderColor='var(--accent)';
+  searchInput.style.boxShadow='0 0 0 3px rgba(59,130,246,0.1)';
+};
+searchInput.onblur=()=>{
+  searchInput.style.borderColor='var(--bg-tertiary)';
+  searchInput.style.boxShadow='none';
+};
 
 searchInput.oninput=(e)=>{
   clearTimeout(searchTimeout);
