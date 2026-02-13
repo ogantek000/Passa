@@ -291,6 +291,15 @@ h1{margin:6px 0 2px;color:var(--accent)}
   font-weight:bold;
 }
 .freeze{background:var(--warning);color:black}
+.freeze.active{
+  background:#ca8a04;
+  opacity:0.7;
+}
+.done.disabled, .freeze.disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+  pointer-events:none;
+}
 .more{background:var(--bg-tertiary);color:var(--text-primary);font-size:18px;min-width:38px;flex:0}
 
 .move-buttons{
@@ -512,7 +521,6 @@ h1{margin:6px 0 2px;color:var(--accent)}
 
 .day.done{background:var(--success);color:white}
 .day.freeze{background:var(--warning);color:black}
-.day.unfrozen{background:#6b7280;color:white}
 .day.missed{background:var(--danger);color:white}
 .day.locked{opacity:.35}
 
@@ -1036,7 +1044,6 @@ function getDailyQuote(){
     currentQuoteIndex=parseInt(savedIndex);
   }
   
-  // Safety check - make sure index is valid
   if(currentQuoteIndex>=defaultQuotes.length){
     currentQuoteIndex=0;
     localStorage.setItem('quoteIndex','0');
@@ -1078,7 +1085,7 @@ function today(){
 
 function getWeekStart(dateStr){
   const d=new Date(dateStr);
-  const day=(d.getDay()+6)%7; // Monday = 0
+  const day=(d.getDay()+6)%7;
   const diff=d.getDate()-day;
   const monday=new Date(d.setDate(diff));
   monday.setMinutes(monday.getMinutes()-monday.getTimezoneOffset());
@@ -1108,6 +1115,132 @@ function hasWeekFreeze(h,weekStart){
   return weekDays.some(day=>h.freezeDates.includes(day));
 }
 
+function checkAndResetStreak(h){
+  if(!h.datesDone || h.datesDone.length===0) return;
+  
+  const todayDate=today();
+  const sortedDates=h.datesDone.slice().sort();
+  const lastDone=sortedDates[sortedDates.length-1];
+  
+  // Initialize freezeDates if it doesn't exist
+  if(!h.freezeDates) h.freezeDates=[];
+  
+  // Calculate days between last done and today
+  const daysDiff=Math.floor((new Date(todayDate)-new Date(lastDone))/DAY);
+  
+  // Check if we need to reset (2 days missed without freeze)
+  if(daysDiff>=2){
+    // Check if yesterday was frozen
+    const yesterday=new Date();
+    yesterday.setDate(yesterday.getDate()-1);
+    yesterday.setMinutes(yesterday.getMinutes()-yesterday.getTimezoneOffset());
+    const yesterdayStr=yesterday.toISOString().slice(0,10);
+    
+    // Check if day before yesterday was frozen
+    const dayBefore=new Date();
+    dayBefore.setDate(dayBefore.getDate()-2);
+    dayBefore.setMinutes(dayBefore.getMinutes()-dayBefore.getTimezoneOffset());
+    const dayBeforeStr=dayBefore.toISOString().slice(0,10);
+    
+    const yesterdayFrozen=h.freezeDates.includes(yesterdayStr);
+    const dayBeforeFrozen=h.freezeDates.includes(dayBeforeStr);
+    
+    // If both days are not frozen, reset
+    if(!yesterdayFrozen && !dayBeforeFrozen){
+      h.streak=0;
+    }
+  }
+}
+
+function recalculateStreak(h){
+  if(!h.datesDone || h.datesDone.length===0){
+    h.streak=0;
+    return;
+  }
+  
+  if(!h.freezeDates) h.freezeDates=[];
+  
+  const todayDate=today();
+  const sortedDates=h.datesDone.slice().sort().reverse(); // newest first
+  
+  let streak=0;
+  let currentDate=new Date(todayDate);
+  
+  if(h.frequency==='weekly'){
+    // Weekly streak calculation
+    let currentWeekStart=getWeekStart(todayDate);
+    
+    // Check if current week is done or frozen
+    const currentWeekDone=hasWeekDone(h,currentWeekStart);
+    const currentWeekFrozen=hasWeekFreeze(h,currentWeekStart);
+    
+    if(!currentWeekDone && !currentWeekFrozen){
+      h.streak=0;
+      return;
+    }
+    
+    // Count consecutive weeks
+    while(true){
+      const weekDone=hasWeekDone(h,currentWeekStart);
+      const weekFrozen=hasWeekFreeze(h,currentWeekStart);
+      
+      if(weekDone){
+        streak++;
+      }else if(weekFrozen){
+        // Frozen week counts as continuation but doesn't increment
+      }else{
+        break;
+      }
+      
+      // Move to previous week
+      const prevWeekDate=new Date(currentWeekStart);
+      prevWeekDate.setDate(prevWeekDate.getDate()-7);
+      currentWeekStart=getWeekStart(prevWeekDate.toISOString().slice(0,10));
+    }
+  }else{
+    // Daily streak calculation
+    const lastDone=sortedDates[0];
+    const daysSinceLastDone=Math.floor((new Date(todayDate)-new Date(lastDone))/DAY);
+    
+    // Check if today is done or frozen
+    const todayDone=h.datesDone.includes(todayDate);
+    const todayFrozen=h.freezeDates.includes(todayDate);
+    
+    if(!todayDone && !todayFrozen){
+      h.streak=0;
+      return;
+    }
+    
+    // Count consecutive days backwards from today
+    for(let i=0;i<100;i++){ // max 100 days to prevent infinite loop
+      const checkDate=new Date(todayDate);
+      checkDate.setDate(checkDate.getDate()-i);
+      checkDate.setMinutes(checkDate.getMinutes()-checkDate.getTimezoneOffset());
+      const checkDateStr=checkDate.toISOString().slice(0,10);
+      
+      const isDone=h.datesDone.includes(checkDateStr);
+      const isFrozen=h.freezeDates.includes(checkDateStr);
+      
+      if(isDone){
+        streak++;
+      }else if(isFrozen){
+        // Frozen day - continue checking but don't increment
+        continue;
+      }else{
+        // Gap found - stop counting
+        break;
+      }
+    }
+  }
+  
+  h.streak=streak;
+  
+  // Update best streak if current is higher
+  if(!h.bestStreak || h.streak>h.bestStreak){
+    h.bestStreak=h.streak;
+  }
+}
+
 function startCountdown(){
   const el=document.getElementById("countdown");
   setInterval(()=>{
@@ -1130,6 +1263,10 @@ const save=()=>{
   localStorage.setItem("keepyFolders",JSON.stringify(folders));
 };
 
+// Check all habits for streak resets on load
+habits.forEach(h=>checkAndResetStreak(h));
+save();
+
 document.getElementById("themeBtn").onclick=()=>{
   currentTheme=(currentTheme+1)%themes.length;
   document.body.setAttribute('data-theme',themes[currentTheme]);
@@ -1148,7 +1285,6 @@ function updateStats(){
   let total=0,max=0,bestEver=0,dates={},categoryCount={},totalFreezes=0;
   
   habits.forEach(h=>{
-    // Initialize bestStreak if it doesn't exist
     if(!h.bestStreak) h.bestStreak=0;
     if(!h.freezeDates) h.freezeDates=[];
     
@@ -1172,7 +1308,6 @@ function updateStats(){
   document.getElementById('bestEver').textContent=bestEver;
   document.getElementById('totalFreezes').textContent=totalFreezes;
   
-  // Oblicz procent miesiąca
   const now=new Date();
   const year=now.getFullYear();
   const month=now.getMonth();
@@ -1288,29 +1423,39 @@ function renderCalendar(h, habitIndex){
     const ds=new Date(date.getTime()-date.getTimezoneOffset()*60000).toISOString().slice(0,10);
     const diff=(new Date(today())-new Date(ds))/DAY;
     const isWeekly=h.frequency==='weekly';
-    const editable=isWeekly?(diff>=0 && diff<=14):(diff>=0 && diff<=7);
+    
+    // For weekly: allow editing current week and past 2 weeks (up to 21 days back)
+    // For daily: allow editing last 7 days
+    let editable;
+    if(isWeekly){
+      const weekStart=getWeekStart(ds);
+      const currentWeekStart=getWeekStart(today());
+      const weekDiff=(new Date(currentWeekStart)-new Date(weekStart))/DAY/7;
+      editable=(weekDiff<=2 && diff<=21);
+    }else{
+      editable=(diff>=0 && diff<=7);
+    }
     const isToday=ds===today();
 
     const div=document.createElement("div");
     div.className="day";
     div.textContent=d;
     
-    // Mark today
     if(isToday) div.classList.add("today");
 
-    // Initialize freezeDates if it doesn't exist
     if(!h.freezeDates) h.freezeDates=[];
 
     if(isWeekly){
-      // Weekly mode - highlight whole week
       const weekStart=getWeekStart(ds);
       const isDoneThisWeek=hasWeekDone(h,weekStart);
       const isFrozenThisWeek=hasWeekFreeze(h,weekStart);
       const isPastWeek=diff>7;
       
-      if(isFrozenThisWeek && !h.freeze){
+      if(h.freeze && weekStart===getWeekStart(today())){
+        // Current week with active freeze
         div.classList.add("week-freeze");
-      }else if(h.freeze && weekStart===getWeekStart(today())){
+      }else if(isFrozenThisWeek){
+        // Past week that was frozen
         div.classList.add("week-freeze");
       }else if(isDoneThisWeek){
         div.classList.add("week-done");
@@ -1318,13 +1463,14 @@ function renderCalendar(h, habitIndex){
         div.classList.add("week-missed");
       }
     }else{
-      // Daily mode - single day highlighting
       const wasFrozen=h.freezeDates.includes(ds);
       const isDone=h.datesDone.includes(ds);
       
-      if(wasFrozen && !h.freeze){
-        div.classList.add("unfrozen");
-      }else if(h.freeze && ds===today()){
+      if(h.freeze && ds===today()){
+        // Today with active freeze
+        div.classList.add("freeze");
+      }else if(wasFrozen){
+        // Past day that was frozen
         div.classList.add("freeze");
       }else if(isDone){
         div.classList.add("done");
@@ -1341,34 +1487,58 @@ function renderCalendar(h, habitIndex){
       if(!h.editing || !editable) return;
       
       if(isWeekly){
-        // Weekly mode - toggle whole week
         const weekStart=getWeekStart(ds);
         const weekDays=getWeekDays(weekStart);
         const isDoneThisWeek=hasWeekDone(h,weekStart);
+        const isFrozenThisWeek=hasWeekFreeze(h,weekStart);
         
+        // Toggle between done, frozen, and empty
         if(isDoneThisWeek){
-          // Remove all days from this week
+          // If done, make it frozen
           weekDays.forEach(day=>{
             h.datesDone=h.datesDone.filter(x=>x!==day);
+            if(!h.freezeDates.includes(day)){
+              h.freezeDates.push(day);
+            }
+          });
+        }else if(isFrozenThisWeek){
+          // If frozen, clear it
+          weekDays.forEach(day=>{
+            h.freezeDates=h.freezeDates.filter(x=>x!==day);
           });
         }else{
-          // Add first day of week that was clicked
+          // If empty, make it done
           if(!h.datesDone.includes(ds)){
             h.datesDone.push(ds);
           }
         }
       }else{
-        // Daily mode - toggle single day
-        if(h.datesDone.includes(ds)){
+        const isDone=h.datesDone.includes(ds);
+        const isFrozen=h.freezeDates.includes(ds);
+        
+        // Toggle between done, frozen, and empty
+        if(isDone){
+          // If done, make it frozen
           h.datesDone=h.datesDone.filter(x=>x!==ds);
+          if(!h.freezeDates.includes(ds)){
+            h.freezeDates.push(ds);
+          }
+        }else if(isFrozen){
+          // If frozen, clear it
+          h.freezeDates=h.freezeDates.filter(x=>x!==ds);
         }else{
+          // If empty, make it done
           h.datesDone.push(ds);
         }
       }
       
+      // Recalculate streak after editing
+      recalculateStreak(h);
+      
       save();
       updateSingleCalendar(habitIndex);
       updateStats();
+      render();
     };
 
     daysContainer.append(div);
@@ -1514,8 +1684,14 @@ function createHabitElement(h,i){
   
   const streakEmoji=h.streakEmoji||'🔥';
   const isDoneToday=h.datesDone.includes(today());
+  const isFrozenToday=h.freeze;
   const frequency=h.frequency||'daily';
   const frequencyLabel=frequency==='weekly'?'📆 Tyg.':'📅 Codz.';
+  
+  // Determine button states
+  const doneClasses=isDoneToday?'done completed disabled':'done';
+  const freezeClasses=isFrozenToday?'freeze active disabled':'freeze';
+  const freezeText=isFrozenToday?"❄️ Aktywny":"❄️ Freeze";
 
   div.innerHTML=`
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
@@ -1528,8 +1704,8 @@ function createHabitElement(h,i){
         <div class="streak" id="streak-${i}"><span class="streak-number">${streakEmoji} ${h.streak}</span></div>
       </div>
       <div class="actions">
-        <button class="done ${isDoneToday?'completed':''}">✓ Zrobione</button>
-        <button class="freeze">${h.freeze?"❄️ Odmróż":"❄️ Freeze"}</button>
+        <button class="${doneClasses}">✓ Zrobione</button>
+        <button class="${freezeClasses}">${freezeText}</button>
         <button class="more">⋯</button>
       </div>
     </div>
@@ -1729,11 +1905,14 @@ function createHabitElement(h,i){
   div.querySelector(".done").onclick=(e)=>{
     e.preventDefault();
     e.stopPropagation();
-    if(h.freeze) return;
+    
+    // Check if already done or frozen
+    if(isDoneToday || isFrozenToday) return;
+    
     if(!h.datesDone.includes(today())){
       h.datesDone.push(today());
       h.streak++;
-      if(!h.bestStreak || h.streak>h.bestStreak) h.bestStreak=h.streak;
+      if(!h.bestStreak || h.streak>h.bestStreak) h.bestStreak=h.bestStreak=h.streak;
       save();
       render();
       setTimeout(()=>{
@@ -1754,17 +1933,24 @@ function createHabitElement(h,i){
   div.querySelector(".freeze").onclick=(e)=>{
     e.preventDefault();
     e.stopPropagation();
-    h.freeze=!h.freeze;
     
-    if(h.freeze){
-      if(!h.freezeDates) h.freezeDates=[];
-      if(!h.freezeDates.includes(today())){
-        h.freezeDates.push(today());
+    // Check if already done or frozen
+    if(isDoneToday || isFrozenToday){
+      if(isFrozenToday){
+        showToast("Freeze jest aktywny na dzisiaj i nie można go cofnąć");
       }
+      return;
     }
     
+    // Activating freeze
+    h.freeze=true;
+    if(!h.freezeDates) h.freezeDates=[];
+    if(!h.freezeDates.includes(today())){
+      h.freezeDates.push(today());
+    }
     div.classList.add("ice");
     setTimeout(()=>div.classList.remove("ice"),800);
+    
     save();
     render();
   };
@@ -1788,10 +1974,8 @@ function render(){
   
   emptyState.style.display='none';
   
-  // Render folders
   renderFolders();
   
-  // Render habits without folder
   list.innerHTML='<div class="loading-skeleton"></div><div class="loading-skeleton"></div>';
   
   setTimeout(()=>{
@@ -1846,7 +2030,6 @@ document.getElementById("addBtn").onclick=()=>{
   document.getElementById("folderName").value="";
   document.getElementById("folderEmoji").value="";
   
-  // Update folder dropdown
   const folderSelect=document.getElementById("habitFolder");
   folderSelect.innerHTML='<option value="">Bez folderu</option>';
   folders.forEach(f=>{
