@@ -135,7 +135,11 @@ h1{margin:6px 0 2px;color:var(--accent)}
   background:var(--bg-secondary);
   padding:12px;border-radius:14px;margin-bottom:12px;
   border-left:4px solid var(--accent);
+  position:relative;
+  overflow:visible;
+  z-index:1;
 }
+.folder.menu-open{z-index:200}
 .folder-header{
   display:flex;align-items:center;justify-content:space-between;
   cursor:pointer;
@@ -205,11 +209,27 @@ h1{margin:6px 0 2px;color:var(--accent)}
 }
 
 .habit.ice::after{
-  content:"";position:absolute;inset:0;
-  background:var(--accent);opacity:0;border-radius:14px;
-  animation:ice .8s
+  content:"❄️";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(135deg, rgba(59,130,246,0.3), rgba(147,197,253,0.5), rgba(59,130,246,0.3));
+  opacity:0;
+  border-radius:14px;
+  animation:ice 1.2s ease-in-out;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:80px;
+  pointer-events:none;
 }
-@keyframes ice{30%,60%{opacity:.6}100%{opacity:0}}
+@keyframes ice{
+  0%{opacity:0;transform:scale(0.5) rotate(0deg)}
+  15%{opacity:1;transform:scale(1.3) rotate(10deg)}
+  30%{opacity:0.9;transform:scale(1.1) rotate(-5deg)}
+  50%{opacity:0.8;transform:scale(1.15) rotate(3deg)}
+  70%{opacity:0.6;transform:scale(1.05) rotate(-2deg)}
+  100%{opacity:0;transform:scale(1) rotate(0deg)}
+}
 
 .category-badge{
   display:inline-block;
@@ -249,6 +269,10 @@ h1{margin:6px 0 2px;color:var(--accent)}
 .streak-number{
   display:inline-block;
   animation:slideDown .4s ease-out;
+  transition:transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.streak-number.bump{
+  animation:bumpScale 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 @keyframes slideDown{
   from{
@@ -259,6 +283,13 @@ h1{margin:6px 0 2px;color:var(--accent)}
     transform:translateY(0);
     opacity:1;
   }
+}
+@keyframes bumpScale{
+  0%{transform:scale(1)}
+  40%{transform:scale(1.15) rotate(-3deg)}
+  60%{transform:scale(1.12) rotate(2deg)}
+  80%{transform:scale(1.1) rotate(-1deg)}
+  100%{transform:scale(1) rotate(0deg)}
 }
 
 .actions{display:flex;gap:6px;flex-wrap:wrap}
@@ -660,11 +691,11 @@ h1{margin:6px 0 2px;color:var(--accent)}
 </div>
 
 <div id="stats">
+  <div><div>Dzisiaj</div><div id="todayStats">0/0</div></div>
   <div><div>Dni wykonane</div><div id="totalDone">0</div></div>
   <div><div>Najdłuższa passa</div><div id="maxStreak">0</div></div>
   <div><div>Średnia dzienna</div><div id="avgDaily">0</div></div>
   <div><div>Rekord życiowy</div><div id="bestEver">0</div></div>
-  <div><div>Procent miesiąca</div><div id="monthPercent">0%</div></div>
   <div><div>Użyte freeze'y</div><div id="totalFreezes">0</div></div>
 </div>
 
@@ -692,6 +723,10 @@ h1{margin:6px 0 2px;color:var(--accent)}
     📈 Statystyki per kategoria <span style="float:right">▼</span>
   </h3>
   <div id="categoryStatsList" style="display:none"></div>
+</div>
+
+<div style="margin-bottom:14px">
+  <input type="text" id="searchInput" placeholder="🔍 Szukaj passy..." style="width:100%;padding:12px;border:1px solid var(--bg-tertiary);border-radius:10px;background:var(--bg-secondary);color:var(--text-primary);box-sizing:border-box;font-size:15px">
 </div>
 
 <div class="empty-state" id="emptyState" style="display:none">
@@ -792,6 +827,42 @@ h1{margin:6px 0 2px;color:var(--accent)}
     <div class="modal-buttons">
       <button class="btn-secondary" id="cancelQuotesBtn">Anuluj</button>
       <button class="btn-primary" id="saveQuotesBtn">Zapisz</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="deleteConfirmModal">
+  <div class="modal-content">
+    <h3 style="color:var(--danger)">🗑️ Usuń passę?</h3>
+    <p style="color:var(--text-secondary);margin:16px 0">Czy na pewno chcesz usunąć passę <strong id="deleteHabitName"></strong>?</p>
+    <p style="color:var(--danger);font-size:14px;margin:12px 0">Stracisz passę <span id="deleteHabitStreak"></span>!</p>
+    <div class="modal-buttons">
+      <button class="btn-secondary" id="cancelDeleteBtn">Anuluj</button>
+      <button class="btn-primary" id="confirmDeleteBtn" style="background:var(--danger)">Usuń</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="deleteFolderModal">
+  <div class="modal-content">
+    <h3 style="color:var(--danger)">🗑️ Usuń folder?</h3>
+    <p style="color:var(--text-secondary);margin:16px 0">Czy na pewno chcesz usunąć folder <strong id="deleteFolderName"></strong>?</p>
+    <p style="color:var(--text-secondary);font-size:14px;margin:12px 0">Passy zostaną przeniesione do głównej listy.</p>
+    <div class="modal-buttons">
+      <button class="btn-secondary" id="cancelDeleteFolderBtn">Anuluj</button>
+      <button class="btn-primary" id="confirmDeleteFolderBtn" style="background:var(--danger)">Usuń</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="editFolderModal">
+  <div class="modal-content">
+    <h3>📁 Edytuj folder</h3>
+    <input type="text" id="editFolderName" placeholder="Nazwa folderu">
+    <input type="text" id="editFolderEmoji" placeholder="Emoji folderu (np. 💪, 🎯, 📚)" maxlength="2">
+    <div class="modal-buttons">
+      <button class="btn-secondary" id="cancelEditFolderBtn">Anuluj</button>
+      <button class="btn-primary" id="saveEditFolderBtn">Zapisz</button>
     </div>
   </div>
 </div>
@@ -1072,25 +1143,29 @@ function switchQuoteLang(lang){
 
 function today(){
   const d=new Date();
+  // Always use local timezone consistently
   d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
   return d.toISOString().slice(0,10);
 }
 
 function getWeekStart(dateStr){
-  const d=new Date(dateStr);
-  const day=(d.getDay()+6)%7;
+  const d=new Date(dateStr+'T00:00:00'); // Force local time interpretation
+  const day=(d.getDay()+6)%7; // Monday = 0
   const diff=d.getDate()-day;
-  const monday=new Date(d.setDate(diff));
+  const monday=new Date(d);
+  monday.setDate(diff);
+  monday.setHours(0,0,0,0);
   monday.setMinutes(monday.getMinutes()-monday.getTimezoneOffset());
   return monday.toISOString().slice(0,10);
 }
 
 function getWeekDays(weekStart){
   const days=[];
-  const start=new Date(weekStart);
+  const start=new Date(weekStart+'T00:00:00'); // Force local time interpretation
   for(let i=0;i<7;i++){
     const d=new Date(start);
     d.setDate(start.getDate()+i);
+    d.setHours(0,0,0,0);
     d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
     days.push(d.toISOString().slice(0,10));
   }
@@ -1277,6 +1352,11 @@ if(savedTheme){
 function updateStats(){
   let total=0,max=0,bestEver=0,dates={},categoryCount={},totalFreezes=0;
   
+  // Today's stats - count habits done today (excluding frozen)
+  const todayDate=today();
+  let todayDone=0;
+  let todayTotal=0;
+  
   habits.forEach(h=>{
     if(!h.bestStreak) h.bestStreak=0;
     if(!h.freezeDates) h.freezeDates=[];
@@ -1292,7 +1372,30 @@ function updateStats(){
     if(!categoryCount[cat])categoryCount[cat]={count:0,days:0};
     categoryCount[cat].count++;
     categoryCount[cat].days+=h.datesDone.length;
+    
+    // Count for today's stats (exclude frozen habits)
+    const isFrozenToday=h.freezeDates.includes(todayDate);
+    if(!isFrozenToday){
+      todayTotal++;
+      if(h.datesDone.includes(todayDate)){
+        todayDone++;
+      }
+    }
   });
+  
+  // Update today's stats
+  const todayStatsEl=document.getElementById('todayStats');
+  if(todayStatsEl){
+    todayStatsEl.textContent=`${todayDone}/${todayTotal}`;
+    // Color based on completion
+    if(todayDone===todayTotal && todayTotal>0){
+      todayStatsEl.style.color='var(--success)';
+    }else if(todayDone>0){
+      todayStatsEl.style.color='var(--warning)';
+    }else{
+      todayStatsEl.style.color='var(--accent)';
+    }
+  }
   
   const days=Object.keys(dates).length||1;
   totalDone.textContent=total;
@@ -1300,20 +1403,6 @@ function updateStats(){
   avgDaily.textContent=(total/days).toFixed(2);
   document.getElementById('bestEver').textContent=bestEver;
   document.getElementById('totalFreezes').textContent=totalFreezes;
-  
-  const now=new Date();
-  const year=now.getFullYear();
-  const month=now.getMonth();
-  const daysInMonth=new Date(year,month+1,0).getDate();
-  const currentDay=now.getDate();
-  
-  let doneDaysThisMonth=0;
-  for(let d=1;d<=currentDay;d++){
-    const dateStr=new Date(year,month,d).toISOString().slice(0,10);
-    if(dates[dateStr])doneDaysThisMonth++;
-  }
-  const monthPercent=currentDay>0?((doneDaysThisMonth/currentDay)*100).toFixed(0):0;
-  document.getElementById('monthPercent').textContent=`${monthPercent}%`;
   
   const categoryStats=document.getElementById("categoryStats");
   window.categoryData=categoryCount;
@@ -1559,11 +1648,18 @@ function renderCalendar(h, habitIndex){
       
       updateStats();
       
-      // Update the streak display
+      // Update the streak display with animation
       const streakEl=document.getElementById(`streak-${habitIndex}`);
       if(streakEl){
         const streakEmoji=h.streakEmoji||'🔥';
-        streakEl.innerHTML=`<span class="streak-number">${streakEmoji} ${h.streak}</span>`;
+        const numberEl=streakEl.querySelector('.streak-number');
+        if(numberEl){
+          numberEl.classList.add('bump');
+          numberEl.textContent=`${streakEmoji} ${h.streak}`;
+          setTimeout(()=>numberEl.classList.remove('bump'),600);
+        }else{
+          streakEl.innerHTML=`<span class="streak-number">${streakEmoji} ${h.streak}</span>`;
+        }
       }
     };
 
@@ -1660,15 +1756,67 @@ function renderFolders(){
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <span class="folder-count">${folderHabits.length}</span>
+        <button class="more" style="background:var(--bg-tertiary);color:var(--text-primary);font-size:18px;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;min-width:38px;min-height:38px;transition:transform .2s, opacity .2s">⋯</button>
         <span style="font-size:18px;transition:transform .2s" id="folderArrow-${folderIndex}">▼</span>
       </div>
     `;
     
-    header.onclick=()=>{
+    // Menu for folder
+    const menu=document.createElement("div");
+    menu.className="menu";
+    menu.style.display="none";
+    menu.innerHTML=`
+      <button class="editFolder">✏️ Edytuj folder</button>
+      <button class="deleteFolder danger">🗑 Usuń folder</button>
+    `;
+    
+    folderDiv.append(menu);
+    
+    const moreBtn=header.querySelector('.more');
+    moreBtn.onclick=(e)=>{
+      e.stopPropagation();
+      document.querySelectorAll('.menu').forEach(m=>m.style.display='none');
+      document.querySelectorAll('.folder').forEach(f=>f.classList.remove('menu-open'));
+      document.querySelectorAll('.habit').forEach(h=>h.classList.remove('menu-open'));
+      menu.style.display=menu.style.display==="block"?"none":"block";
+      if(menu.style.display==="block"){
+        folderDiv.classList.add('menu-open');
+      }
+    };
+    
+    menu.querySelector('.editFolder').onclick=()=>{
+      menu.style.display="none";
+      folderDiv.classList.remove('menu-open');
+      
+      const editFolderModal=document.getElementById("editFolderModal");
+      editFolderModal.classList.add("show");
+      editFolderModal.dataset.folderIndex=folderIndex;
+      document.getElementById("editFolderName").value=folder.name;
+      document.getElementById("editFolderEmoji").value=folder.emoji||'';
+    };
+    
+    menu.querySelector('.deleteFolder').onclick=()=>{
+      menu.style.display="none";
+      folderDiv.classList.remove('menu-open');
+      
+      const deleteFolderModal=document.getElementById("deleteFolderModal");
+      document.getElementById("deleteFolderName").textContent=folder.name;
+      deleteFolderModal.classList.add("show");
+      deleteFolderModal.dataset.folderIndex=folderIndex;
+    };
+    
+    // Toggle folder content on header click (but not on more button)
+    const titleArea=header.querySelector('.folder-title');
+    const arrowArea=header.querySelector(`#folderArrow-${folderIndex}`);
+    
+    const toggleFolder=()=>{
       folder.open=!folder.open;
       save();
       renderFolders();
     };
+    
+    titleArea.onclick=toggleFolder;
+    arrowArea.onclick=toggleFolder;
     
     const content=document.createElement("div");
     content.className="folder-content";
@@ -1680,35 +1828,6 @@ function renderFolders(){
       content.append(habitDiv);
       setTimeout(()=>habitDiv.classList.add("show"),10+i*50);
     });
-    
-    const actions=document.createElement("div");
-    actions.className="folder-actions";
-    actions.innerHTML=`
-      <button class="renameFolder">✏️ Zmień nazwę</button>
-      <button class="deleteFolder" style="color:#ff453a">🗑 Usuń folder</button>
-    `;
-    
-    actions.querySelector('.renameFolder').onclick=()=>{
-      const newName=prompt("Nowa nazwa folderu:",folder.name);
-      if(newName && newName.trim()){
-        folder.name=newName.trim();
-        save();
-        renderFolders();
-      }
-    };
-    
-    actions.querySelector('.deleteFolder').onclick=()=>{
-      if(confirm(`Usunąć folder "${folder.name}"? Passy zostaną przeniesione do głównej listy.`)){
-        habits.forEach(h=>{
-          if(h.folderId===folder.id) delete h.folderId;
-        });
-        folders.splice(folderIndex,1);
-        save();
-        render();
-      }
-    };
-    
-    if(folder.open) content.append(actions);
     
     folderDiv.append(header,content);
     foldersContainer.append(folderDiv);
@@ -1970,20 +2089,18 @@ function createHabitElement(h,i){
   div.querySelector(".deleteHist").onclick=(e)=>{
     e.stopPropagation();
     menu.style.display="none";
-    setTimeout(()=>{
-      if(confirm(`Jesteś pewien? Stracisz passę ${h.streakEmoji||'🔥'}${h.streak}!`)){
-        deletedHabit={...h};
-        deletedIndex=i;
-        habits.splice(i,1);
-        save();
-        render();
-        showToast("Passa usunięta","Cofnij",()=>{
-          habits.splice(deletedIndex,0,deletedHabit);
-          save();
-          render();
-        });
-      }
-    },100);
+    div.classList.remove('menu-open');
+    
+    // Show delete confirmation modal
+    const deleteModal=document.getElementById("deleteConfirmModal");
+    const deleteHabitName=document.getElementById("deleteHabitName");
+    const deleteHabitStreak=document.getElementById("deleteHabitStreak");
+    
+    deleteHabitName.textContent=h.name;
+    deleteHabitStreak.textContent=`${h.streakEmoji||'🔥'}${h.streak}`;
+    
+    deleteModal.classList.add("show");
+    deleteModal.dataset.habitIndex=i;
   };
 
   div.querySelector(".done").onclick=(e)=>{
@@ -2044,9 +2161,9 @@ function createHabitElement(h,i){
     
     save();
     
-    // Show ice animation
+    // Show ice animation - longer duration to match CSS
     div.classList.add("ice");
-    setTimeout(()=>div.classList.remove("ice"),800);
+    setTimeout(()=>div.classList.remove("ice"),1200);
     
     // Force update the entire habit element to reflect changes
     const habitParent=div.parentElement;
@@ -2350,6 +2467,131 @@ quotesModal.onclick=(e)=>{
   if(e.target===quotesModal) quotesModal.classList.remove("show");
 };
 
+// Delete confirmation modal handlers
+const deleteConfirmModal=document.getElementById("deleteConfirmModal");
+
+document.getElementById("cancelDeleteBtn").onclick=()=>{
+  deleteConfirmModal.classList.remove("show");
+};
+
+document.getElementById("confirmDeleteBtn").onclick=()=>{
+  const idx=parseInt(deleteConfirmModal.dataset.habitIndex);
+  deletedHabit={...habits[idx]};
+  deletedIndex=idx;
+  habits.splice(idx,1);
+  save();
+  render();
+  deleteConfirmModal.classList.remove("show");
+  showToast("Passa usunięta","Cofnij",()=>{
+    habits.splice(deletedIndex,0,deletedHabit);
+    save();
+    render();
+  });
+};
+
+deleteConfirmModal.onclick=(e)=>{
+  if(e.target===deleteConfirmModal) deleteConfirmModal.classList.remove("show");
+};
+
+// Delete folder confirmation modal handlers
+const deleteFolderModal=document.getElementById("deleteFolderModal");
+
+document.getElementById("cancelDeleteFolderBtn").onclick=()=>{
+  deleteFolderModal.classList.remove("show");
+};
+
+document.getElementById("confirmDeleteFolderBtn").onclick=()=>{
+  const idx=parseInt(deleteFolderModal.dataset.folderIndex);
+  const folder=folders[idx];
+  
+  // Move all habits from folder to main list
+  habits.forEach(h=>{
+    if(h.folderId===folder.id) delete h.folderId;
+  });
+  
+  folders.splice(idx,1);
+  save();
+  render();
+  deleteFolderModal.classList.remove("show");
+  showToast(`Folder "${folder.name}" usunięty`);
+};
+
+deleteFolderModal.onclick=(e)=>{
+  if(e.target===deleteFolderModal) deleteFolderModal.classList.remove("show");
+};
+
+// Edit folder modal handlers
+const editFolderModal=document.getElementById("editFolderModal");
+
+document.getElementById("cancelEditFolderBtn").onclick=()=>{
+  editFolderModal.classList.remove("show");
+};
+
+document.getElementById("saveEditFolderBtn").onclick=()=>{
+  const idx=parseInt(editFolderModal.dataset.folderIndex);
+  const newName=document.getElementById("editFolderName").value.trim();
+  const newEmoji=document.getElementById("editFolderEmoji").value.trim();
+  
+  if(newName){
+    folders[idx].name=newName;
+    folders[idx].emoji=newEmoji||'📁';
+    save();
+    renderFolders();
+    editFolderModal.classList.remove("show");
+  }else{
+    alert("Wpisz nazwę folderu");
+  }
+};
+
+editFolderModal.onclick=(e)=>{
+  if(e.target===editFolderModal) editFolderModal.classList.remove("show");
+};
+
+// Search functionality
+const searchInput=document.getElementById("searchInput");
+let searchTimeout;
+
+searchInput.oninput=(e)=>{
+  clearTimeout(searchTimeout);
+  searchTimeout=setTimeout(()=>{
+    const query=e.target.value.toLowerCase().trim();
+    
+    // Get all habit elements
+    const allHabits=document.querySelectorAll('.habit');
+    const allFolders=document.querySelectorAll('.folder');
+    
+    if(!query){
+      // Show all
+      allHabits.forEach(h=>h.style.display='block');
+      allFolders.forEach(f=>f.style.display='block');
+      return;
+    }
+    
+    // Filter habits
+    allHabits.forEach(habitDiv=>{
+      const nameEl=habitDiv.querySelector('.name');
+      if(nameEl){
+        const name=nameEl.textContent.toLowerCase();
+        if(name.includes(query)){
+          habitDiv.style.display='block';
+        }else{
+          habitDiv.style.display='none';
+        }
+      }
+    });
+    
+    // Show/hide folders based on if they have visible habits
+    allFolders.forEach(folderDiv=>{
+      const visibleHabits=folderDiv.querySelectorAll('.habit[style*="display: block"], .habit:not([style*="display: none"])');
+      if(visibleHabits.length>0 || !query){
+        folderDiv.style.display='block';
+      }else{
+        folderDiv.style.display='none';
+      }
+    });
+  },300);
+};
+
 updateQuote();
 
 document.addEventListener('click',(e)=>{
@@ -2357,6 +2599,7 @@ document.addEventListener('click',(e)=>{
     document.querySelectorAll('.menu').forEach(m=>m.style.display='none');
     document.querySelectorAll('.submenu').forEach(m=>m.style.display='none');
     document.querySelectorAll('.habit').forEach(h=>h.classList.remove('menu-open'));
+    document.querySelectorAll('.folder').forEach(f=>f.classList.remove('menu-open'));
   }
 });
 
