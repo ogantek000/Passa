@@ -1534,7 +1534,9 @@ function renderCalendar(h, habitIndex){
   // Add empty cells for days before month starts
   for(let i=0;i<first;i++){
     const emptyDiv=document.createElement("div");
-    emptyDiv.style.width="14.2%";
+    emptyDiv.className="day";
+    emptyDiv.style.opacity="0";
+    emptyDiv.style.pointerEvents="none";
     daysContainer.append(emptyDiv);
   }
   
