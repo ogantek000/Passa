@@ -1214,35 +1214,60 @@ function checkAndResetStreak(h){
   }
   
   const todayDate=today();
-  const sortedDates=h.datesDone.slice().sort();
-  const lastDone=sortedDates[sortedDates.length-1];
+  const frequency=h.frequency||'daily';
   
   // Initialize freezeDates if it doesn't exist
   if(!h.freezeDates) h.freezeDates=[];
   
-  // Calculate days between last done and today
-  const daysDiff=Math.floor((new Date(todayDate)-new Date(lastDone))/DAY);
-  
-  // Check if we need to reset (2 days missed without freeze)
-  if(daysDiff>=2){
-    // Check if yesterday was frozen
-    const yesterday=new Date();
-    yesterday.setDate(yesterday.getDate()-1);
-    yesterday.setMinutes(yesterday.getMinutes()-yesterday.getTimezoneOffset());
-    const yesterdayStr=yesterday.toISOString().slice(0,10);
+  if(frequency==='weekly'){
+    // For weekly habits, check if we missed 2 consecutive weeks
+    const currentWeekStart=getWeekStart(todayDate);
+    const currentWeekDone=hasWeekDone(h,currentWeekStart);
+    const currentWeekFrozen=hasWeekFreeze(h,currentWeekStart);
     
-    // Check if day before yesterday was frozen
-    const dayBefore=new Date();
-    dayBefore.setDate(dayBefore.getDate()-2);
-    dayBefore.setMinutes(dayBefore.getMinutes()-dayBefore.getTimezoneOffset());
-    const dayBeforeStr=dayBefore.toISOString().slice(0,10);
+    if(!currentWeekDone && !currentWeekFrozen){
+      // Check last week
+      const lastWeekStart=new Date(currentWeekStart);
+      lastWeekStart.setDate(lastWeekStart.getDate()-7);
+      const lastWeekStartStr=new Date(lastWeekStart.getTime()-lastWeekStart.getTimezoneOffset()*60000).toISOString().slice(0,10);
+      
+      const lastWeekDone=hasWeekDone(h,lastWeekStartStr);
+      const lastWeekFrozen=hasWeekFreeze(h,lastWeekStartStr);
+      
+      // If current week AND last week are not done/frozen, reset
+      if(!lastWeekDone && !lastWeekFrozen){
+        h.streak=0;
+      }
+    }
+  }else{
+    // For daily habits, check if we missed 2 consecutive days
+    const sortedDates=h.datesDone.slice().sort();
+    const lastDone=sortedDates[sortedDates.length-1];
     
-    const yesterdayFrozen=h.freezeDates.includes(yesterdayStr);
-    const dayBeforeFrozen=h.freezeDates.includes(dayBeforeStr);
+    // Calculate days between last done and today
+    const daysDiff=Math.floor((new Date(todayDate)-new Date(lastDone+'T00:00:00'))/DAY);
     
-    // If both days are not frozen, reset
-    if(!yesterdayFrozen && !dayBeforeFrozen){
-      h.streak=0;
+    // Check if we need to reset (2 days missed without freeze)
+    if(daysDiff>=2){
+      // Check if yesterday was frozen
+      const yesterday=new Date();
+      yesterday.setDate(yesterday.getDate()-1);
+      yesterday.setMinutes(yesterday.getMinutes()-yesterday.getTimezoneOffset());
+      const yesterdayStr=yesterday.toISOString().slice(0,10);
+      
+      // Check if day before yesterday was frozen
+      const dayBefore=new Date();
+      dayBefore.setDate(dayBefore.getDate()-2);
+      dayBefore.setMinutes(dayBefore.getMinutes()-dayBefore.getTimezoneOffset());
+      const dayBeforeStr=dayBefore.toISOString().slice(0,10);
+      
+      const yesterdayFrozen=h.freezeDates.includes(yesterdayStr);
+      const dayBeforeFrozen=h.freezeDates.includes(dayBeforeStr);
+      
+      // If both days are not frozen, reset
+      if(!yesterdayFrozen && !dayBeforeFrozen){
+        h.streak=0;
+      }
     }
   }
 }
@@ -2249,6 +2274,29 @@ function createHabitElement(h,i){
         showToast(msg);
       }
       return;
+    }
+    
+    // Check if already frozen 2 days in a row (for daily habits)
+    if(frequency==='daily'){
+      const todayDate=today();
+      const yesterday=new Date();
+      yesterday.setDate(yesterday.getDate()-1);
+      yesterday.setMinutes(yesterday.getMinutes()-yesterday.getTimezoneOffset());
+      const yesterdayStr=yesterday.toISOString().slice(0,10);
+      
+      const dayBefore=new Date();
+      dayBefore.setDate(dayBefore.getDate()-2);
+      dayBefore.setMinutes(dayBefore.getMinutes()-dayBefore.getTimezoneOffset());
+      const dayBeforeStr=dayBefore.toISOString().slice(0,10);
+      
+      if(!h.freezeDates) h.freezeDates=[];
+      const yesterdayFrozen=h.freezeDates.includes(yesterdayStr);
+      const dayBeforeFrozen=h.freezeDates.includes(dayBeforeStr);
+      
+      if(yesterdayFrozen && dayBeforeFrozen){
+        showToast("Nie możesz zamrozić 3 dni z rzędu! Maksymalnie 2 dni.");
+        return;
+      }
     }
     
     // Activating freeze
