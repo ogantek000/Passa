@@ -1207,6 +1207,12 @@ function hasWeekFreeze(h,weekStart){
 function checkAndResetStreak(h){
   if(!h.datesDone || h.datesDone.length===0) return;
   
+  // Clean up data: remove duplicates and sort
+  h.datesDone=[...new Set(h.datesDone)].sort();
+  if(h.freezeDates){
+    h.freezeDates=[...new Set(h.freezeDates)].sort();
+  }
+  
   const todayDate=today();
   const sortedDates=h.datesDone.slice().sort();
   const lastDone=sortedDates[sortedDates.length-1];
@@ -1247,7 +1253,11 @@ function recalculateStreak(h){
     return;
   }
   
+  // Clean up data: remove duplicates
+  h.datesDone=[...new Set(h.datesDone)].sort();
+  
   if(!h.freezeDates) h.freezeDates=[];
+  h.freezeDates=[...new Set(h.freezeDates)].sort();
   
   const todayDate=today();
   const sortedDates=h.datesDone.slice().sort().reverse(); // newest first
@@ -1382,9 +1392,26 @@ function updateStats(){
     if(!h.bestStreak) h.bestStreak=0;
     if(!h.freezeDates) h.freezeDates=[];
     
-    h.datesDone.forEach(d=>{
-      total++;dates[d]=(dates[d]||0)+1;
-    });
+    const frequency=h.frequency||'daily';
+    
+    // For "Dni wykonane" - count properly for weekly vs daily
+    if(frequency==='weekly'){
+      // For weekly habits, count number of completed weeks, not individual days
+      const weeks=new Set();
+      h.datesDone.forEach(d=>{
+        const weekStart=getWeekStart(d);
+        weeks.add(weekStart);
+        dates[weekStart]=(dates[weekStart]||0)+1;
+      });
+      total+=weeks.size; // Count unique weeks
+    }else{
+      // For daily habits, count individual days
+      h.datesDone.forEach(d=>{
+        total++;
+        dates[d]=(dates[d]||0)+1;
+      });
+    }
+    
     if(h.streak>max)max=h.streak;
     if(h.bestStreak>bestEver)bestEver=h.bestStreak;
     totalFreezes+=h.freezeDates.length;
@@ -1395,10 +1422,22 @@ function updateStats(){
     categoryCount[cat].days+=h.datesDone.length;
     
     // Count for today's stats (exclude frozen habits)
-    const isFrozenToday=h.freezeDates.includes(todayDate);
+    let isFrozenToday, isDoneToday;
+    
+    if(frequency==='weekly'){
+      // For weekly habits, check if current week is done/frozen
+      const currentWeekStart=getWeekStart(todayDate);
+      isFrozenToday=hasWeekFreeze(h,currentWeekStart);
+      isDoneToday=hasWeekDone(h,currentWeekStart);
+    }else{
+      // For daily habits, check today
+      isFrozenToday=h.freezeDates.includes(todayDate);
+      isDoneToday=h.datesDone.includes(todayDate);
+    }
+    
     if(!isFrozenToday){
       todayTotal++;
-      if(h.datesDone.includes(todayDate)){
+      if(isDoneToday){
         todayDone++;
       }
     }
@@ -1622,7 +1661,7 @@ function renderCalendar(h, habitIndex){
         
         // Toggle between done, frozen, and empty
         if(isDoneThisWeek){
-          // If done, make it frozen
+          // If done, make it frozen - remove all week days from done, add to frozen
           weekDays.forEach(day=>{
             h.datesDone=h.datesDone.filter(x=>x!==day);
             if(!h.freezeDates.includes(day)){
@@ -1630,15 +1669,17 @@ function renderCalendar(h, habitIndex){
             }
           });
         }else if(isFrozenThisWeek){
-          // If frozen, clear it
+          // If frozen, clear it - remove from frozen
           weekDays.forEach(day=>{
             h.freezeDates=h.freezeDates.filter(x=>x!==day);
           });
         }else{
-          // If empty, make it done
-          if(!h.datesDone.includes(ds)){
-            h.datesDone.push(ds);
-          }
+          // If empty, make it done - add WHOLE WEEK to datesDone
+          weekDays.forEach(day=>{
+            if(!h.datesDone.includes(day)){
+              h.datesDone.push(day);
+            }
+          });
         }
       }else{
         const isDone=h.datesDone.includes(ds);
@@ -1655,8 +1696,10 @@ function renderCalendar(h, habitIndex){
           // If frozen, clear it
           h.freezeDates=h.freezeDates.filter(x=>x!==ds);
         }else{
-          // If empty, make it done
-          h.datesDone.push(ds);
+          // If empty, make it done - check for duplicates
+          if(!h.datesDone.includes(ds)){
+            h.datesDone.push(ds);
+          }
         }
       }
       
@@ -2235,6 +2278,16 @@ function createHabitElement(h,i){
 }
 
 function render(){
+  // Clean up all habits data on each render
+  habits.forEach(h=>{
+    if(h.datesDone){
+      h.datesDone=[...new Set(h.datesDone)].sort();
+    }
+    if(h.freezeDates){
+      h.freezeDates=[...new Set(h.freezeDates)].sort();
+    }
+  });
+  
   const emptyState=document.getElementById("emptyState");
   const categoryStats=document.getElementById("categoryStats");
   
